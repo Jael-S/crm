@@ -21,6 +21,7 @@ class DashboardController extends Controller
             'total_vendedores_activos' => Usuario::where('id_rol', 3)->where('activo', true)->count(),
             'total_etapas' => EtapaPipeline::count(),
             'total_origenes' => OrigenLead::count(),
+            'mi_round_robin' => (bool) $user->participa_round_robin,
         ];
 
         return Inertia::render('Dashboard/Index', [

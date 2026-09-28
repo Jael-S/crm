@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,17 +14,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Ejecutamos los seeders de Lookups
+        // 1. Roles y Usuarios (Módulo 1 - Nataly)
+        $this->call([
+            RolSeeder::class,
+            UsuarioSeeder::class,
+        ]);
+
+        // 2. Lookups y Catálogos (Jael)
         $this->call([
             EtapaPipelineSeeder::class,
             OrigenLeadSeeder::class,
             MotivoPerdidaSeeder::class,
-        ]);
-
-        // 2. Usuario de prueba por defecto de Laravel (lo puedes dejar temporalmente)
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
         ]);
     }
 }
