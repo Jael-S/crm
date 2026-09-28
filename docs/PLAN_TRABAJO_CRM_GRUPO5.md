@@ -559,7 +559,7 @@ Todas las rutas devuelven `Inertia::render(...)`. Los datos se pasan como segund
 | Ver todos los leads | ✅ | ❌ (solo sus versiones, Fase 2) | ❌ (solo cartera + bolsa) |
 | Registrar leads (manual) | ✅ | ✅ | ✅ |
 | Importar leads (CSV) | ✅ | ✅ | ❌ |
-| Asignar / Transferir leads | ✅ | ❌ | ❌ |
+| Asignar / Transferir leads | ✅ | ✅ (sus versiones, RF2.3) | ❌ |
 | Mover en el Kanban | ✅ | ✅ (su alcance) | ✅ (su alcance) |
 | Agregar notas / recordatorios | ✅ | ✅ | ✅ |
 | Ver bitácora del lead | ✅ | ✅ (su alcance) | ✅ (su alcance) |
