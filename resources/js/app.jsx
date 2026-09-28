@@ -2,10 +2,10 @@ import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME || 'CRM Educativo';
+const appName = import.meta.env.VITE_APP_NAME || 'CRM EDUCATIVO';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => (title && title !== appName ? `${title} - ${appName}` : appName),
     resolve: (name) => {
         const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true });
         const page = pages[`./Pages/${name}.jsx`];
