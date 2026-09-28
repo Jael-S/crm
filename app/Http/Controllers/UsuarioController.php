@@ -39,13 +39,23 @@ class UsuarioController extends Controller
 
     public function update(UpdateUserRequest $request, int $id): RedirectResponse
     {
-        $this->userService->actualizar($id, $request->validated());
+        $datos = $request->validated();
+
+        if (auth()->id() === $id && isset($datos['activo']) && ! $datos['activo']) {
+            return redirect()->route('usuarios.index')->with('error', 'El administrador no puede bloquearse a sí mismo o desactivar su cuenta.');
+        }
+
+        $this->userService->actualizar($id, $datos);
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
 
     public function toggleStatus(int $id): RedirectResponse
     {
+        if (auth()->id() === $id) {
+            return redirect()->route('usuarios.index')->with('error', 'El administrador no puede bloquearse a sí mismo o desactivar su cuenta.');
+        }
+
         $usuario = $this->userService->toggleActivo($id);
         $estado = $usuario->activo ? 'activado' : 'desactivado';
 
