@@ -27,25 +27,21 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-body)] flex flex-col justify-center items-center p-4">
-      <Head title="Iniciar Sesión" />
+      <Head title="CRM EDUCATIVO" />
 
       {/* Tarjeta de Login */}
       <div className="w-full max-w-md bg-white rounded-[var(--radius-lg)] shadow-md border border-[var(--border-color-light)] overflow-hidden">
         {/* Cabecera Corporativa con Rojo Institucional */}
         <div className="bg-[var(--brand-secondary)] p-6 text-white text-center">
-          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <GraduationCap size={32} className="text-white" />
+          <div className="flex justify-center mb-3">
+            <img src="/FICCT.png" alt="Logo FICCT" className="h-20 w-auto object-contain drop-shadow" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">CRM Educativo</h1>
-          <p className="text-sm text-white/80 mt-1">Facultad de Ingeniería (FICCT - UAGRM)</p>
+          <h1 className="text-2xl font-bold tracking-tight">CRM EDUCATIVO</h1>
+          <p className="text-sm text-white/80 mt-1">Control de prospectos y trazabilidad académica</p>
         </div>
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-5">
-          <div className="text-center mb-2">
-            <h2 className="text-lg font-bold text-[var(--text-heading)]">Ingreso al Sistema</h2>
-            <p className="text-xs text-[var(--text-muted)]">Control de prospectos y trazabilidad académica</p>
-          </div>
 
           {/* Campo Correo */}
           <div>

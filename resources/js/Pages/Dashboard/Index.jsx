@@ -22,15 +22,13 @@ export default function DashboardIndex({ stats, userRol }) {
       {/* Banner de Bienvenida */}
       <div className="bg-gradient-to-r from-[var(--brand-primary)] to-[#203366] text-white p-6 sm:p-8 rounded-[var(--radius-lg)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white mb-2">
-            <Shield size={13} />
-            Sesión activa como {userRol}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-2xl font-bold tracking-tight">
             Hola, {user?.nombre_completo}
           </h1>
-          <p className="text-sm text-white/80 mt-1 max-w-xl">
-            Panel de control general del CRM Educativo. Desde aquí puedes gestionar prospectos, usuarios y consultar las etapas comerciales.
+          <p className="text-sm text-white/800 mt-1 max-w-xl">
+            Panel de control general del CRM EDUCATIVO. </p>
+          <p className="text-sm text-white/800 mt-1 max-w-xl"> 
+            Desde aquí puedes gestionar prospectos, usuarios y consultar las etapas comerciales.
           </p>
         </div>
 

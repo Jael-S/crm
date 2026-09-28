@@ -83,13 +83,11 @@ export default function AppLayout({ children, title }) {
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
           
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-between p-2 text-white">
-              <GraduationCap size={24} />
-            </div>
+          <div className="flex items-center space-x-3">
+            <img src="/FICCT.png" alt="Logo FICCT" className="h-10 w-auto object-contain drop-shadow-sm" />
             <div>
-              <span className="text-xl font-bold tracking-tight block leading-tight">CRM Educativo</span>
-              <span className="text-xs text-white/80 font-normal">Grupo 5 SC · Nexo UAGRM</span>
+              <span className="text-xl font-bold tracking-tight block leading-tight">CRM EDUCATIVO</span>
+              <span className="text-xs text-white/80 font-normal">Control de prospectos y trazabilidad académica</span>
             </div>
           </div>
         </div>
@@ -148,7 +146,6 @@ export default function AppLayout({ children, title }) {
 
           <div className="pt-4 border-t border-[var(--border-color-light)] text-xs text-[var(--text-muted)] px-2">
             <p className="font-semibold text-[var(--text-heading)]">Rol Actual: {roleName}</p>
-            <p className="mt-0.5">Control de Prospectos RBAC</p>
           </div>
         </aside>
 

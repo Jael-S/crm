@@ -121,4 +121,41 @@ class AuthAndUserManagementTest extends TestCase
             'participa_round_robin' => ! $originalRR,
         ]);
     }
+
+    public function test_admin_cannot_deactivate_their_own_account(): void
+    {
+        $admin = Usuario::where('id_rol', 1)->first();
+
+        $response = $this->actingAs($admin)->patch("/usuarios/{$admin->id_usuario}/status");
+
+        $response->assertRedirect('/usuarios');
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('usuarios', [
+            'id_usuario' => $admin->id_usuario,
+            'activo' => true,
+        ]);
+    }
+
+    public function test_admin_can_access_lookups_page(): void
+    {
+        $admin = Usuario::where('id_rol', 1)->first();
+
+        $response = $this->actingAs($admin)->get('/lookups');
+
+        $response->assertStatus(200);
+    }
+
+    public function test_lookups_api_returns_json(): void
+    {
+        $admin = Usuario::where('id_rol', 1)->first();
+
+        $response = $this->actingAs($admin)->getJson('/lookups');
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'etapas_pipeline',
+            'origenes_lead',
+            'motivos_perdida',
+        ]);
+    }
 }

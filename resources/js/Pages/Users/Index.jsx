@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import Card from '@/Shared/Card';
 import Button from '@/Shared/Button';
@@ -15,6 +15,9 @@ import {
 } from 'lucide-react';
 
 export default function UsersIndex({ usuarios, roles, filters }) {
+  const { auth } = usePage().props;
+  const currentUserId = auth?.user?.id_usuario;
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [search, setSearch] = useState(filters?.search || '');
@@ -90,6 +93,10 @@ export default function UsersIndex({ usuarios, roles, filters }) {
   };
 
   const toggleStatus = (userId) => {
+    if (userId === currentUserId) {
+      alert('El administrador no puede bloquearse a sí mismo o desactivar su cuenta.');
+      return;
+    }
     router.patch(`/usuarios/${userId}/status`, {}, { preserveScroll: true });
   };
 
@@ -118,9 +125,6 @@ export default function UsersIndex({ usuarios, roles, filters }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-heading)]">Gestión de Usuarios</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            Control de cuentas, asignación de roles y participación en Round-Robin (RF 1.1)
-          </p>
         </div>
         <Button onClick={openCreateModal} className="flex items-center gap-2">
           <UserPlus size={18} />
@@ -222,19 +226,29 @@ export default function UsersIndex({ usuarios, roles, filters }) {
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => toggleStatus(u.id_usuario)}
-                        title="Clic para activar o desactivar cuenta"
-                        className={`cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${
-                          u.activo
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                        }`}
-                      >
-                        {u.activo ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                        {u.activo ? 'Activo' : 'Inactivo'}
-                      </button>
+                      {u.id_usuario === currentUserId ? (
+                        <span
+                          title="No puedes desactivar tu propia cuenta de Administrador"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-not-allowed opacity-90"
+                        >
+                          <CheckCircle2 size={12} />
+                          Activo (Tú)
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggleStatus(u.id_usuario)}
+                          title="Clic para activar o desactivar cuenta"
+                          className={`cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${
+                            u.activo
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                          }`}
+                        >
+                          {u.activo ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                          {u.activo ? 'Activo' : 'Inactivo'}
+                        </button>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-xs text-[var(--text-muted)]">
                       {u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleString('es-BO') : 'Sin registros'}
@@ -379,15 +393,21 @@ export default function UsersIndex({ usuarios, roles, filters }) {
 
               {/* Toggles */}
               <div className="pt-2 border-t border-[var(--border-color-light)] space-y-2">
-                <label className="flex items-center space-x-2 text-xs text-[var(--text-heading)] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={data.activo}
-                    onChange={(e) => setData('activo', e.target.checked)}
-                    className="rounded border-[var(--border-color-dark)] text-[var(--color-primary)]"
-                  />
-                  <span className="font-semibold">Cuenta Activa (Habilita el inicio de sesión)</span>
-                </label>
+                {editingUser?.id_usuario === currentUserId ? (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-[var(--brand-primary)]">
+                    <strong>Cuenta de Administrador protegida:</strong> Tu usuario debe permanecer activo para no bloquear el acceso al sistema.
+                  </div>
+                ) : (
+                  <label className="flex items-center space-x-2 text-xs text-[var(--text-heading)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={data.activo}
+                      onChange={(e) => setData('activo', e.target.checked)}
+                      className="rounded border-[var(--border-color-dark)] text-[var(--color-primary)]"
+                    />
+                    <span className="font-semibold">Cuenta Activa (Habilita el inicio de sesión)</span>
+                  </label>
+                )}
 
                 {Number(data.id_rol) === 3 && (
                   <label className="flex items-center space-x-2 text-xs text-[var(--text-heading)] cursor-pointer">
