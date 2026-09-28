@@ -1,9 +1,52 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+:root {
+  /* --- Colores de Marca --- */
+  --brand-primary: #3d5598;    /* Azul corporativo oscuro */
+  --brand-secondary: #da3038;  /* Rojo corporativo (usado en el Navbar principal) */
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+  /* --- Colores Principales de Interfaz --- */
+  --color-primary: #0051f9;    /* Azul brillante (Botones principales, enlaces, hover states) */
+  --color-primary-hover: #0041c7; /* Azul más oscuro para el hover */
+  --color-secondary: #6a737b;  /* Gris secundario (iconos inactivos, texto secundario) */
+
+  /* --- Fondos (Backgrounds) --- */
+  --bg-body: #f5f9fd;          /* Color de fondo principal de la página */
+  --bg-surface: #ffffff;       /* Fondo de tarjetas, modales y contenedores */
+  --bg-sidebar: #f8f9fa;       /* Fondo del menú lateral */
+  --bg-highlight: #ebf0f9;     /* Fondo para elementos destacados suaves */
+
+  /* --- Texto --- */
+  --text-main: #4c5a73;        /* Color principal de párrafos y textos generales */
+  --text-heading: #313848;     /* Color oscuro para títulos (h1, h2, h3) */
+  --text-muted: #6a737b;       /* Textos secundarios, fechas */
+  --text-light: #ffffff;       /* Texto sobre fondos oscuros o botones primarios */
+
+  /* --- Estados (Feedback) --- */
+  --color-success: #28a745;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+  --color-info: #17a2b8;
+
+  /* --- Bordes y Sombras --- */
+  --border-color-light: #ebf0f9;  /* Bordes de tarjetas y divisiones sutiles */
+  --border-color-dark: #d5ddea;   /* Bordes de inputs y tablas */
+
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --shadow-card-hover: 0 13px 37px rgba(92, 107, 121, 0.1);
+
+  /* --- Radios (Border-radius) --- */
+  --radius-sm: 4px;      /* Inputs, botones pequeños */
+  --radius-md: 5px;      /* Botones estándar */
+  --radius-lg: 8px;      /* Tarjetas, contenedores principales */
+  --radius-xl: 10px;     /* Modales */
+  --radius-circle: 50%;  /* Avatares, botones circulares */
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
 }
