@@ -9,4 +9,6 @@ class MotivoPerdida extends Model
     protected $table = 'motivos_perdida';
     protected $primaryKey = 'id_motivo';
     public $timestamps = false;
+
+    protected $fillable = ['nombre'];
 }
