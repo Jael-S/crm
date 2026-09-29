@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EtapaPipeline extends Model
 {
@@ -11,4 +12,9 @@ class EtapaPipeline extends Model
     public $timestamps = false; // Como esta tabla es un catálogo fijo, no requiere timestamps
 
     protected $fillable = ['nombre', 'orden'];
+
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class, 'id_etapa', 'id_etapa');
+    }
 }

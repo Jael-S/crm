@@ -128,7 +128,7 @@ export default function Login() {
         {/* Acceso Rápido para Defensa / Pruebas */}
         <div className="bg-[var(--bg-sidebar)] p-4 border-t border-[var(--border-color-light)]">
           <p className="text-xs font-bold text-center text-[var(--text-muted)] uppercase tracking-wider mb-2.5">
-            Cuentas Demo para Defensa
+            Cuentas Demo
           </p>
           <div className="grid grid-cols-3 gap-2">
             <button

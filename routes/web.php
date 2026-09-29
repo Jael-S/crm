@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LeadAssignmentController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +35,32 @@ Route::middleware('auth')->group(function () {
         Route::patch('/usuarios/{id}/round-robin', [UsuarioController::class, 'toggleRoundRobin'])->name('usuarios.toggle-round-robin');
 
         Route::get('/lookups', [LookupController::class, 'index'])->name('lookups.index');
+    });
+
+    // Bolsa Común (Administrador y Vendedor) - Definido antes de {id} para evitar colisión
+    Route::middleware('checkRole:Administrador,Vendedor')->group(function () {
+        Route::get('/leads/bolsa-comun', [LeadController::class, 'pool'])->name('leads.pool');
+    });
+
+    // Asignación masiva automática Round-Robin (Exclusivo Administrador)
+    Route::middleware('checkRole:Administrador')->group(function () {
+        Route::post('/leads/asignar-automatico', [LeadAssignmentController::class, 'roundRobin'])->name('leads.round-robin');
+    });
+
+    // Módulo 2: Gestión de Prospectos (Leads) - Acceso según rol
+    Route::middleware('checkRole:Administrador,Coordinador,Vendedor')->group(function () {
+        Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
+        Route::get('/leads/create', [LeadController::class, 'create'])->name('leads.create');
+        Route::post('/leads', [LeadController::class, 'store'])->name('leads.store');
+        Route::get('/leads/{id}', [LeadController::class, 'show'])->whereNumber('id')->name('leads.show');
+        Route::get('/leads/{id}/edit', [LeadController::class, 'edit'])->whereNumber('id')->name('leads.edit');
+        Route::put('/leads/{id}', [LeadController::class, 'update'])->whereNumber('id')->name('leads.update');
+    });
+
+    // Asignación manual y Transferencias (Administrador y Coordinador - RF2.3 Miriam)
+    Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
+        Route::post('/leads/{id}/asignar', [LeadAssignmentController::class, 'assign'])->whereNumber('id')->name('leads.assign');
+        Route::post('/leads/{id}/transferir', [LeadAssignmentController::class, 'transfer'])->whereNumber('id')->name('leads.transfer');
     });
 
     // Lookups API endpoints para uso interno

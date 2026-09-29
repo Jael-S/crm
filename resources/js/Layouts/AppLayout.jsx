@@ -67,6 +67,26 @@ export default function AppLayout({ children, title }) {
 
   const allowedNavItems = navItems.filter(item => item.roles.includes(roleName));
 
+  const { url } = usePage();
+  const currentPath = (url || (typeof window !== 'undefined' ? window.location.pathname : '')).split('?')[0];
+
+  const isItemActive = (href) => {
+    if (currentPath === href) return true;
+
+    // Para el menú de prospectos, solo activar si es /leads, /leads/create o /leads/{id}, pero NO si es /leads/bolsa-comun o /leads/import
+    if (href === '/leads') {
+      if (currentPath === '/leads/create') return true;
+      if (/^\/leads\/\d+/.test(currentPath)) return true;
+      return false;
+    }
+
+    if (href !== '/dashboard' && currentPath.startsWith(`${href}/`)) {
+      return true;
+    }
+
+    return false;
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg-body)] flex flex-col font-sans">
       {/* 1. Navbar Superior Fijo (80px - Rojo Corporativo) */}
@@ -126,7 +146,7 @@ export default function AppLayout({ children, title }) {
           <nav className="space-y-1.5 flex-1">
             {allowedNavItems.map((item) => {
               const Icon = item.icon;
-              const isActive = window.location.pathname === item.href || window.location.pathname.startsWith(`${item.href}/`);
+              const isActive = isItemActive(item.href);
               return (
                 <Link
                   key={item.name}
@@ -160,7 +180,7 @@ export default function AppLayout({ children, title }) {
               <nav className="space-y-1.5 flex-1">
                 {allowedNavItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = window.location.pathname === item.href;
+                  const isActive = isItemActive(item.href);
                   return (
                     <Link
                       key={item.name}
