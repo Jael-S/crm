@@ -7,6 +7,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CsvImportController;
 
 // Redirección inicial
 Route::get('/', function () {
@@ -40,6 +41,12 @@ Route::middleware('auth')->group(function () {
     // Bolsa Común (Administrador y Vendedor) - Definido antes de {id} para evitar colisión
     Route::middleware('checkRole:Administrador,Vendedor')->group(function () {
         Route::get('/leads/bolsa-comun', [LeadController::class, 'pool'])->name('leads.pool');
+    });
+
+    // Importación CSV (Admin/Coordinador) — antes de /leads/{id}
+    Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
+        Route::get('/leads/import', [CsvImportController::class, 'index'])->name('importar.csv');
+        Route::post('/leads/import', [CsvImportController::class, 'store'])->name('importar.csv.store');
     });
 
     // Asignación masiva automática Round-Robin (Exclusivo Administrador)

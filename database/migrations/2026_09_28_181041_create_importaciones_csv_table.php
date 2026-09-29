@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('importaciones_csv', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->id('id_importacion');
+            $table->foreignId('id_usuario')->constrained('usuarios', 'id_usuario')->cascadeOnDelete();
+            $table->string('nombre_archivo', 150);
+            $table->integer('total_filas')->nullable();
+            $table->integer('filas_exitosas')->nullable();
+            $table->integer('filas_fallidas')->nullable();
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 
