@@ -29,7 +29,7 @@ return new class extends Migration
             $table->text('comentario_perdida')->nullable();
             
             // Importación CSV (Fase 1 - Dev C)
-            $table->foreignId('id_importacion')->nullable()->constrained('importaciones_csv', 'id')->nullOnDelete();
+            $table->foreignId('id_importacion')->nullable()->constrained('importaciones_csv', 'id_importacion')->nullOnDelete();
             $table->timestamp('fecha_asignacion')->nullable();
             
             // Datos requeridos al convertir el prospecto (Fase 2 / 3)
