@@ -26,5 +26,10 @@ class DatabaseSeeder extends Seeder
             OrigenLeadSeeder::class,
             MotivoPerdidaSeeder::class,
         ]);
+
+        // 3. Leads y Asignaciones Demo (Nicol - Dev B)
+        $this->call([
+            LeadSeeder::class,
+        ]);
     }
 }

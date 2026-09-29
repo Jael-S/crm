@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Usuario extends Authenticatable
 {
@@ -64,5 +65,20 @@ class Usuario extends Authenticatable
     public function isVendedor(): bool
     {
         return $this->rol?->nombre === 'Vendedor';
+    }
+
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class, 'id_vendedor', 'id_usuario');
+    }
+
+    public function asignacionesRecibidas(): HasMany
+    {
+        return $this->hasMany(AsignacionLead::class, 'id_vendedor_nuevo', 'id_usuario');
+    }
+
+    public function asignacionesRealizadas(): HasMany
+    {
+        return $this->hasMany(AsignacionLead::class, 'asignado_por', 'id_usuario');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrigenLead extends Model
 {
@@ -11,4 +12,9 @@ class OrigenLead extends Model
     public $timestamps = false;
 
     protected $fillable = ['nombre'];
+
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class, 'id_origen', 'id_origen');
+    }
 }
