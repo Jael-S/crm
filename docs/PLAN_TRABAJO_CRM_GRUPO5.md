@@ -115,7 +115,8 @@ crm-educativo/                          ← raíz del proyecto (1 solo repo Git)
 │   │   │   ├── BitacoraController.php           # Dev A: timeline, notas manuales
 │   │   │   ├── RecordatorioController.php       # Dev A: CRUD recordatorios, alertas
 │   │   │   ├── PaymentController.php            # Dev A: subir comprobante, aprobar/rechazar
-│   │   │   ├── LookupController.php             # Dev C: orígenes, etapas, motivos
+│   │   │   ├── DescuentoController.php          # Dev A: CRUD descuentos
+│   │   │   ├── LookupController.php             # Dev C: orígenes, etapas, motivos, profesiones
 │   │   │   ├── CsvImportController.php          # Dev C: subir CSV, historial
 │   │   │   ├── CatalogController.php            # Dev C: proxy al Proyecto 2
 │   │   │   ├── LeadInterestController.php       # Dev C: intereses del lead (versión/módulo)
@@ -144,6 +145,8 @@ crm-educativo/                          ← raíz del proyecto (1 solo repo Git)
 │   │   ├── EnvioMatricula.php                   # Dev B
 │   │   ├── Bitacora.php                         # Dev A
 │   │   ├── Recordatorio.php                     # Dev A
+│   │   ├── Descuento.php                        # Dev A
+│   │   ├── Profesion.php                        # Dev B / C
 │   │   ├── OrigenLead.php                       # Dev C
 │   │   ├── EtapaPipeline.php                    # Dev C
 │   │   ├── MotivoPerdida.php                    # Dev C
@@ -320,6 +323,27 @@ crm-educativo/                          ← raíz del proyecto (1 solo repo Git)
 | `id_motivo` | SERIAL | PK | |
 | `nombre` | VARCHAR(80) | NOT NULL | Factor económico, Horario, etc. |
 
+#### `profesiones`
+| Campo | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `id_profesion` | SERIAL | PK | |
+| `nombre` | VARCHAR(100) | NOT NULL | Abogado, Ingeniero de Sistemas, Médico, etc. |
+
+**Seed inicial sugerido:** Profesiones comunes del mercado objetivo.
+
+---
+
+### Módulo 2 – Descuentos y Promociones
+
+#### `descuentos`
+| Campo | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `id_descuento` | SERIAL | PK | |
+| `nombre` | VARCHAR(100) | NOT NULL | Pronto Pago, Pago al Contado, Exalumno, etc. |
+| `porcentaje` | NUMERIC(5,2) | NOT NULL | Porcentaje de descuento (ej. 10.00, 20.00) |
+| `descripcion` | VARCHAR(255) | NULLABLE | Términos o condiciones del descuento |
+| `activo` | BOOLEAN | NOT NULL, DEFAULT true | Habilitar/deshabilitar por el Admin |
+
 ---
 
 ### Módulo 2 – Leads y Asignación
@@ -343,6 +367,8 @@ crm-educativo/                          ← raíz del proyecto (1 solo repo Git)
 | `telefono` | VARCHAR(20) | NOT NULL | |
 | `correo` | VARCHAR(120) | NULLABLE | |
 | `id_origen` | INT | FK → `origenes_lead`, NOT NULL | |
+| `id_profesion` | INT | FK → `profesiones`, NULLABLE | Profesión principal acordada |
+| `id_descuento` | INT | FK → `descuentos`, NULLABLE | Descuento asignado (máximo 1) |
 | `id_etapa` | INT | FK → `etapas_pipeline`, NOT NULL, DEFAULT 1 | Empieza en "Nuevo" |
 | `id_vendedor` | INT | FK → `usuarios`, NULLABLE | NULL = bolsa común |
 | `id_motivo_perdida` | INT | FK → `motivos_perdida`, NULLABLE | Solo si etapa = Perdido |
@@ -359,6 +385,8 @@ crm-educativo/                          ← raíz del proyecto (1 solo repo Git)
 
 **Reglas de negocio clave:**
 - `id_vendedor = NULL` → lead en la **bolsa común** (sin tabla adicional).
+- `id_profesion` representa la profesión única/principal del prospecto.
+- `id_descuento` representa el descuento aplicado por el vendedor (máximo 1 por prospecto).
 - `id_motivo_perdida` es obligatorio si la etapa cambia a "Perdido" (validado en el servicio).
 - `ci`, `nombre_completo`, `fecha_nacimiento`, `ciudad` son obligatorios para pasar a "Convertido" (validado en `PipelineService`).
 
@@ -464,6 +492,8 @@ crm-educativo/                          ← raíz del proyecto (1 solo repo Git)
 | `roles` → `usuarios` | 1:N | `usuarios.id_rol` |
 | `usuarios` → `password_resets` | 1:N | `password_resets.id_usuario` |
 | `origenes_lead` → `leads` | 1:N | `leads.id_origen` |
+| `profesiones` → `leads` | 1:N opcional | `leads.id_profesion` |
+| `descuentos` → `leads` | 1:N opcional | `leads.id_descuento` |
 | `etapas_pipeline` → `leads` | 1:N | `leads.id_etapa` |
 | `motivos_perdida` → `leads` | 1:N opcional | `leads.id_motivo_perdida` |
 | `usuarios (vendedor)` → `leads` | 1:N opcional | `leads.id_vendedor` |
@@ -612,28 +642,39 @@ Todas las rutas devuelven `Inertia::render(...)`. Los datos se pasan como segund
 
 ### FASE 2 — Lun 12 oct | Kanban + Bitácora + Catálogo Externo
 
-**Entregable:** Kanban funcional, historial de interacciones, notas, recordatorios y vista del catálogo del Proyecto 2.
+**Entregable:** Kanban funcional, historial de interacciones, notas, recordatorios, catálogo de descuentos, asignación de profesión única y vista del catálogo del Proyecto 2.
 
-#### Orden de trabajo
+#### Orden de trabajo (Crítico y Secuencial)
 
-1. Jael configura `CatalogService` (proxy a la API del Proyecto 2) y publica `LeadInterestController`.
-2. Nicol construye los endpoints del Pipeline (board, cambio de etapa, validaciones).
-3. Nataly agrega las tablas de bitácora y recordatorios, y las vincula llamando a `BitacoraService` desde los servicios de Nicol (las dos coordinan).
-4. Integración: la tarjeta del Kanban muestra interés y recordatorio; el detalle del lead muestra el Timeline.
+1. **Jael (Dev C) – Inicia de inmediato (Ajuste de BD e Integración Externa):**
+   - **Actualización de Base de Datos Base:** Crea la migración de `profesiones` (lookup) y `descuentos` (o se coordinan antes de tocar `leads`). Actualiza la migración de `leads` agregando las claves foráneas `id_profesion` (nullable) e `id_descuento` (nullable). Corre `php artisan migrate:fresh --seed` para asegurar consistencia limpia en todo el equipo sin migraciones rotas.
+   - **Catálogo Externo:** Configura `CatalogService` (proxy HTTP a la API del Proyecto 2 / Grupo 6SC) y publica `lead_interes` y `coordinador_version`.
+2. **Nicol (Dev B) – Continúa (Flujo Comercial y Formulario de Leads):**
+   - Actualiza el formulario y controlador de `Lead` para permitir asignar la **profesión única**.
+   - Construye el tablero Kanban (RF3.1, RF3.2) con las 6 etapas y los modales bloqueantes: `LostReasonModal` para "Perdido" (RF3.3) y validación de datos de alumno para "Convertido" (RF3.4).
+   - Permite vincular intereses de programas/módulos desde el servicio de Jael.
+3. **Nataly (Dev A) – Trazabilidad, Descuentos y Despacho:**
+   - Implementa el CRUD de `descuentos` para el Administrador y permite al vendedor asignar máximo 1 descuento en el lead.
+   - Publica `BitacoraService` y `RecordatorioService`.
+   - Prepara el registro de comprobantes y el payload de envío a matrícula del Grupo 6SC.
+4. **Integración:** La tarjeta del Kanban refleja interés, recordatorio y descuento; el detalle del lead muestra el Timeline completo.
 
 #### Tareas por Desarrolladora
 
 | Tarea | **Nataly (Dev A)** | **Nicol (Dev B)** | **Jael (Dev C)** |
 |---|---|---|---|
-| **Migraciones** | `bitacora`, `recordatorios` | — | `lead_interes`, `coordinador_version` |
-| **Modelos** | `Bitacora`, `Recordatorio` | — | `LeadInteres`, `CoordinadorVersion` |
-| **Servicios** | `BitacoraService` (completo: registrar, listar por lead), `RecordatorioService` (crear, completar, alertas) | `PipelineService` (cambio de etapa, validación perdido/convertido, llamada a `BitacoraService`) | `CatalogService` (HTTP al Proyecto 2, con fallback "API no disponible"), `LeadInterestService` |
-| **Controladores** | `BitacoraController`, `RecordatorioController` | `PipelineController` | `CatalogController`, `LeadInterestController`, `CoordinatorVersionController` |
-| **FormRequests** | `StoreNoteRequest`, `StoreRecordatorioRequest` | `UpdateStageRequest` (etapa + motivo) | `StoreInterestRequest` |
-| **Páginas React** | `Pages/Bitacora/Timeline.jsx` (línea de tiempo por lead), `Pages/Recordatorios/Index.jsx` (lista + campana badge) | `Pages/Pipeline/Kanban.jsx` (6 columnas, `LostReasonModal`, `ConversionCheckModal`) | `Pages/Catalog/Index.jsx` (programas → versiones → módulos), `InterestSelector` (dentro de `Show.jsx` de Nicol), `CoordinatorVersionsForm` |
-| **Coordinación especial** | Nataly entrega `BitacoraService::registrar()` en las primeras horas porque `PipelineService` de Nicol lo llama | Nicol avisa a Nataly cuándo integrar los calls a `BitacoraService` en `PipelineService` | Jael avisa si la API del Proyecto 2 cambia de forma |
+| **Migraciones** | `bitacora`, `recordatorios`, `descuentos` | Actualizar `leads` (`id_profesion`, `id_descuento`) | `profesiones`, `lead_interes`, `coordinador_version` *(o Jael ajusta el bloque base antes de `leads` y corre `migrate:fresh --seed`)* |
+| **Modelos** | `Bitacora`, `Recordatorio`, `Descuento` | `Lead` (con relaciones `profesion`, `descuento`), `AsignacionLead` | `Profesion`, `LeadInteres`, `CoordinadorVersion` |
+| **Servicios** | `BitacoraService` (completo: registrar, listar por lead), `RecordatorioService` (crear, completar, alertas), `DescuentoService` | `PipelineService` (cambio de etapa, validación perdido/convertido, llamada a `BitacoraService`), `LeadService` (con profesión y descuento) | `CatalogService` (HTTP al Proyecto 2, con fallback "API no disponible"), `LeadInterestService` |
+| **Controladores** | `BitacoraController`, `RecordatorioController`, `DescuentoController` | `PipelineController`, `LeadController` | `LookupController` (añade `profesiones`), `CatalogController`, `LeadInterestController`, `CoordinatorVersionController` |
+| **FormRequests** | `StoreNoteRequest`, `StoreRecordatorioRequest`, `StoreDescuentoRequest` | `StoreLeadRequest` / `UpdateLeadRequest` (valida `id_profesion`), `UpdateStageRequest` (etapa + motivo) | `StoreInterestRequest` |
+| **Páginas React** | `Pages/Bitacora/Timeline.jsx` (línea de tiempo por lead), `Pages/Recordatorios/Index.jsx` (lista + campana badge), `Pages/Descuentos/Index.jsx` | `Pages/Pipeline/Kanban.jsx` (6 columnas, `LostReasonModal`, `ConversionCheckModal`), `Pages/Leads/Create.jsx` y `Show.jsx` (selector de profesión y descuento) | `Pages/Catalog/Index.jsx` (programas → versiones → módulos), `InterestSelector` (dentro de `Show.jsx` de Nicol), `CoordinatorVersionsForm` |
+| **Coordinación especial** | Nataly entrega `BitacoraService::registrar()` en las primeras horas porque `PipelineService` de Nicol lo llama | Nicol coordina con Jael para usar las profesiones y el catálogo en la creación/interés del lead | Jael actualiza la estructura base de BD primero para que el equipo corra `migrate:fresh --seed` sin conflictos |
 
 **Criterio de aceptación Fase 2:**
+- `php artisan migrate:fresh --seed` corre sin errores con las nuevas tablas (`profesiones`, `descuentos`) y las claves foráneas en `leads`.
+- Un lead se crea con origen y profesión única.
+- El vendedor puede aplicarle un descuento del catálogo activo.
 - Mover una tarjeta a "Perdido" abre modal y no deja avanzar sin motivo.
 - Cada cambio de etapa aparece en el Timeline del lead.
 - Se puede vincular un interés desde el catálogo del Proyecto 2.
