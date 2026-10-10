@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AsignacionLead;
+use App\Models\CoordinadorVersion;
 use App\Models\Lead;
 use App\Models\Usuario;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -20,6 +21,16 @@ class LeadService
         // Alcance según rol: Vendedor solo ve sus asignados
         if ($user->isVendedor()) {
             $query->deVendedor($user->id_usuario);
+        }
+
+        if ($user->isCoordinador()) {
+            $versionIds = CoordinadorVersion::where('id_usuario', $user->id_usuario)
+                ->pluck('id_version_externo');
+
+            $query->whereHas('intereses', function ($intereses) use ($versionIds) {
+                $intereses->where('tipo', 'PROGRAMA')
+                    ->whereIn('id_version_externo', $versionIds);
+            });
         }
 
         // Búsqueda por nombre, teléfono o correo

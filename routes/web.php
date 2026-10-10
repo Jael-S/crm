@@ -8,6 +8,9 @@ use App\Http\Controllers\LookupController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CsvImportController;
+use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\LeadInterestController;
+use App\Http\Controllers\CoordinatorVersionController;
 
 // Redirección inicial
 Route::get('/', function () {
@@ -74,4 +77,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/lookups/origenes', [LookupController::class, 'origenes']);
     Route::get('/lookups/etapas', [LookupController::class, 'etapas']);
     Route::get('/lookups/motivos-perdida', [LookupController::class, 'motivosPerdida']);
+    // Catálogo Externo (Proyecto 2) - visible para Administrador y Coordinador
+    Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
+        Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalogo.index');
+    });
+
+    // Mantiene disponible el enlace anterior mientras se migra al nuevo path.
+    Route::redirect('/catalogo-externo', '/catalogo')->name('catalogo.legacy');
+    //Lead Interests (Intereses de Prospectos) - Acceso según rol
+    Route::middleware('checkRole:Administrador,Coordinador,Vendedor')->group(function () {
+    Route::get('/leads/{id}/intereses', [LeadInterestController::class, 'index'])->name('leads.intereses.index');
+    Route::post('/leads/{id}/intereses', [LeadInterestController::class, 'store'])->name('leads.intereses.store');
+    Route::delete('/leads/{id}/intereses/{interesId}', [LeadInterestController::class, 'destroy'])->name('leads.intereses.destroy');
+    });
+    //Control de versiones de coordinadores (Administrador)
+    Route::middleware('checkRole:Administrador')->group(function () {
+    Route::get('/coordinadores/versiones', [CoordinatorVersionController::class, 'assignmentIndex'])->name('coordinadores.versiones.assignment');
+    Route::get('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'index'])->name('coordinadores.versiones.index');
+    Route::post('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'store'])->name('coordinadores.versiones.store');
+    Route::delete('/coordinadores/{id}/versiones/{version}', [CoordinatorVersionController::class, 'destroy'])->name('coordinadores.versiones.destroy');
+    Route::put('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'update'])->name('coordinadores.versiones.update');
+    });
 });

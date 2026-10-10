@@ -19,16 +19,27 @@ import {
   Inbox,
   Edit2,
   Shield,
-  MessageSquare
+  MessageSquare,
+  Plus,
+  Trash2
 } from 'lucide-react';
 
-export default function LeadsShow({ lead, vendedores = [] }) {
+export default function LeadsShow({ lead, vendedores = [], catalogo = { programas: [], modulos_sueltos: [] } }) {
   const { auth } = usePage().props;
   const user = auth?.user;
   const canAssign = user?.rol?.nombre === 'Administrador' || user?.rol?.nombre === 'Coordinador';
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [interestModalOpen, setInterestModalOpen] = useState(false);
+  const [interestType, setInterestType] = useState('PROGRAMA');
+  const interestForm = useForm({
+    id_lead: lead.id_lead,
+    tipo: 'PROGRAMA',
+    id_version_externo: '',
+    id_modulo_externo: '',
+    nombre_snapshot: '',
+  });
 
   // Formulario Asignación Manual
   const assignForm = useForm({
@@ -53,6 +64,54 @@ export default function LeadsShow({ lead, vendedores = [] }) {
     transferForm.post(`/leads/${lead.id_lead}/transferir`, {
       onSuccess: () => setTransferModalOpen(false),
     });
+  };
+
+  const interestOptions = interestType === 'PROGRAMA'
+    ? catalogo.programas.flatMap((programa) => (programa.versiones || []).map((version) => ({
+        id: version.id,
+        nombre: `${programa.nombre} - ${version.nombre}`,
+      })))
+    : catalogo.modulos_sueltos.map((modulo) => ({ id: modulo.id, nombre: modulo.nombre }));
+
+  const handleInterestTypeChange = (type) => {
+    setInterestType(type);
+    interestForm.setData({
+      ...interestForm.data,
+      tipo: type,
+      id_version_externo: '',
+      id_modulo_externo: '',
+      nombre_snapshot: '',
+    });
+  };
+
+  const handleInterestOptionChange = (e) => {
+    const option = interestOptions.find((item) => String(item.id) === e.target.value);
+    interestForm.setData({
+      ...interestForm.data,
+      id_version_externo: interestType === 'PROGRAMA' ? e.target.value : '',
+      id_modulo_externo: interestType === 'MODULO' ? e.target.value : '',
+      nombre_snapshot: option?.nombre || '',
+    });
+  };
+
+  const handleInterestSubmit = (e) => {
+    e.preventDefault();
+    interestForm.post(`/leads/${lead.id_lead}/intereses`, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setInterestModalOpen(false);
+        interestForm.reset();
+        interestForm.setData('id_lead', lead.id_lead);
+        interestForm.setData('tipo', 'PROGRAMA');
+        setInterestType('PROGRAMA');
+      },
+    });
+  };
+
+  const removeInterest = (interestId) => {
+    if (window.confirm('¿Eliminar este interés del lead?')) {
+      interestForm.delete(`/leads/${lead.id_lead}/intereses/${interestId}`, { preserveScroll: true });
+    }
   };
 
   const getStageBadgeVariant = (stageName) => {
@@ -155,6 +214,35 @@ export default function LeadsShow({ lead, vendedores = [] }) {
                   </span>
                 </div>
               </div>
+            </Card>
+
+            <Card>
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-color-light)]">
+                <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider flex items-center gap-2">
+                  <MessageSquare size={16} className="text-[var(--brand-primary)]" />
+                  <span>Programas y Módulos de Interés</span>
+                </h2>
+                <Button onClick={() => setInterestModalOpen(true)} className="text-xs py-2">
+                  <Plus size={14} className="mr-1" /> Agregar Interés
+                </Button>
+              </div>
+              {lead.intereses?.length ? (
+                <div className="space-y-2">
+                  {lead.intereses.map((interes) => (
+                    <div key={interes.id_interes} className="flex items-center justify-between gap-3 p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                      <div>
+                        <span className="text-[10px] font-bold text-[var(--brand-primary)]">{interes.tipo}</span>
+                        <p className="text-sm font-semibold text-[var(--text-heading)]">{interes.nombre_snapshot}</p>
+                      </div>
+                      <button type="button" onClick={() => removeInterest(interes.id_interes)} className="text-rose-600 hover:text-rose-800" title="Eliminar interés">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--text-muted)]">No hay intereses registrados.</p>
+              )}
             </Card>
 
             {/* Historial de Asignaciones y Auditoría */}
@@ -327,6 +415,34 @@ export default function LeadsShow({ lead, vendedores = [] }) {
               <Button type="submit" variant="primary" disabled={assignForm.processing}>
                 {assignForm.processing ? 'Asignando...' : 'Confirmar Asignación'}
               </Button>
+            </div>
+          </form>
+        </Modal>
+
+        <Modal isOpen={interestModalOpen} onClose={() => setInterestModalOpen(false)} title="Agregar Interés Académico">
+          <form onSubmit={handleInterestSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Tipo</label>
+              <select value={interestType} onChange={(e) => handleInterestTypeChange(e.target.value)} className="w-full px-3 py-2 text-sm border rounded" required>
+                <option value="PROGRAMA">Programa / Cohorte</option>
+                <option value="MODULO">Módulo independiente</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Elemento</label>
+              <select
+                value={interestType === 'PROGRAMA' ? interestForm.data.id_version_externo : interestForm.data.id_modulo_externo}
+                onChange={handleInterestOptionChange}
+                className="w-full px-3 py-2 text-sm border rounded"
+                required
+              >
+                <option value="">Selecciona una opción</option>
+                {interestOptions.map((option) => <option key={option.id} value={option.id}>{option.nombre}</option>)}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" type="button" onClick={() => setInterestModalOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={interestForm.processing}>Guardar Interés</Button>
             </div>
           </form>
         </Modal>

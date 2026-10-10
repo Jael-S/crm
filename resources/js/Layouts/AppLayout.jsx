@@ -58,10 +58,16 @@ export default function AppLayout({ children, title }) {
       roles: ['Administrador', 'Coordinador']
     },
     {
-      name: 'Catálogos Lookups',
-      href: '/lookups',
-      icon: Layers,
+      name: 'Asignación de Programas',
+      href: '/coordinadores/versiones',
+      icon: GraduationCap,
       roles: ['Administrador']
+    },
+    {
+      name: 'Catálogo Externo',
+      href: '/catalogo',
+      icon: Layers,
+      roles: ['Administrador', 'Coordinador']
     }
   ];
 

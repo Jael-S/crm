@@ -90,6 +90,11 @@ class Lead extends Model
         return $this->hasMany(AsignacionLead::class, 'id_lead', 'id_lead')->orderBy('created_at', 'desc');
     }
 
+    public function intereses(): HasMany
+    {
+        return $this->hasMany(LeadInteres::class, 'id_lead', 'id_lead');
+    }
+
     /**
      * Verifica si el lead se encuentra libre en la bolsa común
      */
