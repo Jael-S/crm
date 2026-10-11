@@ -14,7 +14,8 @@ import {
   MapPin,
   Briefcase,
   Percent,
-  Calendar
+  Calendar,
+  CreditCard
 } from 'lucide-react';
 
 export default function LeadsEdit({ lead, origenes = [], etapas = [], profesiones = [], descuentos = [] }) {
