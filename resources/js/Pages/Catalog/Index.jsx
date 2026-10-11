@@ -1,273 +1,209 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import Card from '@/Shared/Card';
+import Badge from '@/Shared/Badge';
 import {
-  Layers,
-  GitCommit,
-  Share2,
-  AlertOctagon,
-  CheckCircle2,
-  ArrowRight,
-  Database,
-  Hash,
-  Sparkles
+    Layers,
+    BookOpen,
+    Bookmark,
+    Globe,
+    ChevronDown,
+    ChevronUp,
+    Clock,
+    DollarSign,
+    LoaderCircle,
 } from 'lucide-react';
 
-export default function CatalogIndex({ etapas_pipeline = [], origenes_lead = [], motivos_perdida = [] }) {
-  const [activeTab, setActiveTab] = useState('etapas');
+export default function CatalogIndex({ catalogo }) {
+    const [activeTab, setActiveTab] = useState('programas');
+    const [expandedProgram, setExpandedProgram] = useState(null);
+    const isLoading = catalogo === undefined || catalogo === null;
+    const programas = catalogo?.programas || [];
+    const modulosSueltos = catalogo?.modulos_sueltos || [];
+    const formatPrice = (price) => `Bs ${Number(price || 0).toLocaleString('es-BO', {
+        minimumFractionDigits: 2,
+    })}`;
 
-  const getStageColor = (nombre) => {
-    switch (nombre.toLowerCase()) {
-      case 'convertido':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'perdido':
-        return 'bg-rose-50 text-rose-700 border-rose-200';
-      case 'promesa de pago':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'nuevo':
-        return 'bg-blue-50 text-[var(--color-primary)] border-blue-200';
-      default:
-        return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-    }
-  };
+    return (
+        <AppLayout>
+            <Head title="Catálogo Externo" />
 
-  return (
-    <AppLayout title="Catálogos Lookups">
-      <Head title="Catálogos Lookups" />
-
-      {/* Cabecera */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-heading)]">
-              Catálogos del Sistema (Lookups)
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[var(--brand-primary)]">
-              Maestras
-            </span>
-          </div>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
-            Tablas de referencia que parametrizan el flujo de leads, etapas del pipeline y motivos de descarte.
-          </p>
-        </div>
-      </div>
-
-      {/* Tarjetas resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button
-          type="button"
-          onClick={() => setActiveTab('etapas')}
-          className={`text-left p-5 rounded-[var(--radius-lg)] border transition cursor-pointer ${
-            activeTab === 'etapas'
-              ? 'bg-white border-[var(--brand-primary)] shadow-md ring-2 ring-[var(--brand-primary)]/20'
-              : 'bg-white border-[var(--border-color-light)] hover:border-gray-300 shadow-sm'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-[var(--brand-primary)] flex items-center justify-center">
-              <GitCommit size={20} />
-            </div>
-            <span className="text-2xl font-extrabold text-[var(--text-heading)]">{etapas_pipeline.length}</span>
-          </div>
-          <h3 className="font-bold text-[var(--text-heading)] mt-3">Etapas del Pipeline</h3>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">Fases del embudo comercial en orden</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('origenes')}
-          className={`text-left p-5 rounded-[var(--radius-lg)] border transition cursor-pointer ${
-            activeTab === 'origenes'
-              ? 'bg-white border-[var(--brand-primary)] shadow-md ring-2 ring-[var(--brand-primary)]/20'
-              : 'bg-white border-[var(--border-color-light)] hover:border-gray-300 shadow-sm'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Share2 size={20} />
-            </div>
-            <span className="text-2xl font-extrabold text-[var(--text-heading)]">{origenes_lead.length}</span>
-          </div>
-          <h3 className="font-bold text-[var(--text-heading)] mt-3">Orígenes de Lead</h3>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">Canales de captación y procedencia</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('motivos')}
-          className={`text-left p-5 rounded-[var(--radius-lg)] border transition cursor-pointer ${
-            activeTab === 'motivos'
-              ? 'bg-white border-[var(--brand-primary)] shadow-md ring-2 ring-[var(--brand-primary)]/20'
-              : 'bg-white border-[var(--border-color-light)] hover:border-gray-300 shadow-sm'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-              <AlertOctagon size={20} />
-            </div>
-            <span className="text-2xl font-extrabold text-[var(--text-heading)]">{motivos_perdida.length}</span>
-          </div>
-          <h3 className="font-bold text-[var(--text-heading)] mt-3">Motivos de Pérdida</h3>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">Causas estandarizadas de descarte</p>
-        </button>
-      </div>
-
-      {/* Contenido según pestaña seleccionada */}
-      <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--border-color-light)] shadow-sm overflow-hidden">
-        {/* Cabecera de la tabla activa */}
-        <div className="p-6 border-b border-[var(--border-color-light)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-bold text-[var(--text-heading)]">
-              {activeTab === 'etapas' && 'Etapas del Pipeline Comercial'}
-              {activeTab === 'origenes' && 'Orígenes y Canales de Captación'}
-              {activeTab === 'motivos' && 'Motivos de Pérdida de Prospectos'}
-            </h2>
-            <p className="text-xs text-[var(--text-muted)]">
-              {activeTab === 'etapas' && 'Secuencia estructurada que recorre cada prospecto desde su ingreso hasta el cierre.'}
-              {activeTab === 'origenes' && 'Puntos de contacto inicial donde se registran nuevos prospectos en el sistema.'}
-              {activeTab === 'motivos' && 'Justificaciones comerciales requeridas al marcar un prospecto como perdido.'}
-            </p>
-          </div>
-          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 self-start">
-            <Database size={13} />
-            <span>Datos sembrados por catálogo</span>
-          </span>
-        </div>
-
-        {/* Tab 1: Etapas del Pipeline */}
-        {activeTab === 'etapas' && (
-          <div className="p-6">
-            {/* Visual Funnel timeline */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-[var(--radius-md)] border border-gray-200">
-              <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3 flex items-center gap-1.5">
-                <Sparkles size={14} className="text-[var(--brand-primary)]" />
-                Flujo del Embudo Comercial
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {etapas_pipeline.map((etapa, idx) => (
-                  <React.Fragment key={etapa.id_etapa}>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white border border-gray-200 shadow-2xs text-xs font-semibold text-[var(--text-heading)]">
-                      <span className="w-5 h-5 rounded-full bg-[var(--brand-primary)] text-white text-[10px] font-bold flex items-center justify-center">
-                        {etapa.orden}
-                      </span>
-                      <span>{etapa.nombre}</span>
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-[var(--text-heading)] flex items-center gap-2">
+                            <Layers className="text-[var(--brand-primary)]" size={28} />
+                            <span>Catálogo Académico Externo</span>
+                        </h1>
+                        <p className="text-sm text-[var(--text-muted)] mt-1">
+                            Sincronización en tiempo real de programas, versiones y módulos del Proyecto 2.
+                        </p>
                     </div>
-                    {idx < etapas_pipeline.length - 1 && (
-                      <ArrowRight size={14} className="text-gray-400" />
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-[var(--radius-sm)]">
+                        <Globe size={15} />
+                        API Externa Conectada
+                    </span>
+                </div>
 
-            {/* Tabla Detallada */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[var(--bg-highlight)] text-xs uppercase font-bold text-[var(--text-heading)]">
-                  <tr>
-                    <th className="px-6 py-3 w-20 text-center">Orden</th>
-                    <th className="px-6 py-3">Nombre de la Etapa</th>
-                    <th className="px-6 py-3">Tipo de Etapa</th>
-                    <th className="px-6 py-3 text-right">ID Interno</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-color-light)]">
-                  {etapas_pipeline.map((e) => (
-                    <tr key={e.id_etapa} className="hover:bg-gray-50/70 transition">
-                      <td className="px-6 py-4 text-center font-bold text-[var(--text-heading)]">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-bold">
-                          {e.orden}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-[var(--text-heading)]">
-                        {e.nombre}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStageColor(e.nombre)}`}>
-                          {e.nombre === 'Convertido' ? 'Cierre Ganado' : e.nombre === 'Perdido' ? 'Cierre Perdido' : 'En Progreso'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right text-xs font-mono text-gray-400">
-                        #{e.id_etapa}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                {isLoading ? (
+                    <Card className="py-16">
+                        <div className="flex flex-col items-center justify-center gap-3 text-[var(--text-muted)]">
+                            <LoaderCircle size={30} className="animate-spin text-[var(--brand-primary)]" />
+                            <span className="text-sm font-medium">Cargando catálogo externo...</span>
+                        </div>
+                    </Card>
+                ) : (
+                    <>
+                        <div className="flex gap-2 border-b border-[var(--border-color-light)]">
+                            <TabButton
+                                active={activeTab === 'programas'}
+                                onClick={() => setActiveTab('programas')}
+                                icon={<BookOpen size={16} />}
+                            >
+                                Programas
+                                <Badge variant="info">{programas.length}</Badge>
+                            </TabButton>
+                            <TabButton
+                                active={activeTab === 'modulos'}
+                                onClick={() => setActiveTab('modulos')}
+                                icon={<Bookmark size={16} />}
+                            >
+                                Módulos Independientes
+                                <Badge variant="success">{modulosSueltos.length}</Badge>
+                            </TabButton>
+                        </div>
 
-        {/* Tab 2: Orígenes de Lead */}
-        {activeTab === 'origenes' && (
-          <div className="p-6">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[var(--bg-highlight)] text-xs uppercase font-bold text-[var(--text-heading)]">
-                  <tr>
-                    <th className="px-6 py-3 w-24 text-center">ID</th>
-                    <th className="px-6 py-3">Canal / Procedencia</th>
-                    <th className="px-6 py-3 text-center">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-color-light)]">
-                  {origenes_lead.map((o) => (
-                    <tr key={o.id_origen} className="hover:bg-gray-50/70 transition">
-                      <td className="px-6 py-4 text-center font-mono text-xs text-gray-500">
-                        #{o.id_origen}
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-[var(--text-heading)] flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                        <span>{o.nombre}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 size={12} />
-                          Disponible
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {activeTab === 'programas' ? (
+                            <ProgramasTab
+                                programas={programas}
+                                expandedProgram={expandedProgram}
+                                setExpandedProgram={setExpandedProgram}
+                                formatPrice={formatPrice}
+                            />
+                        ) : (
+                            <ModulosTab modulos={modulosSueltos} />
+                        )}
+                    </>
+                )}
             </div>
-          </div>
-        )}
+        </AppLayout>
+    );
+}
 
-        {/* Tab 3: Motivos de Pérdida */}
-        {activeTab === 'motivos' && (
-          <div className="p-6">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[var(--bg-highlight)] text-xs uppercase font-bold text-[var(--text-heading)]">
-                  <tr>
-                    <th className="px-6 py-3 w-24 text-center">ID</th>
-                    <th className="px-6 py-3">Motivo Registrado</th>
-                    <th className="px-6 py-3 text-center">Categoría</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-color-light)]">
-                  {motivos_perdida.map((m) => (
-                    <tr key={m.id_motivo} className="hover:bg-gray-50/70 transition">
-                      <td className="px-6 py-4 text-center font-mono text-xs text-gray-500">
-                        #{m.id_motivo}
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-[var(--text-heading)]">
-                        {m.nombre}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                          Descarte de Lead
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-    </AppLayout>
-  );
+function TabButton({ active, onClick, icon, children }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition ${
+                active
+                    ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
+                    : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)]'
+            }`}
+        >
+            {icon}
+            {children}
+        </button>
+    );
+}
+
+function ProgramasTab({ programas, expandedProgram, setExpandedProgram, formatPrice }) {
+    if (programas.length === 0) {
+        return <EmptyState message="No se encontraron programas disponibles o la API externa no responde." />;
+    }
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {programas.map((programa) => {
+                const expanded = expandedProgram === programa.id;
+
+                return (
+                    <div key={programa.id} className="overflow-hidden rounded-xl border border-[var(--border-color-light)] bg-white shadow-sm">
+                        <button
+                            type="button"
+                            onClick={() => setExpandedProgram(expanded ? null : programa.id)}
+                            className="w-full text-left"
+                        >
+                            <div className="h-16 bg-gradient-to-r from-[var(--brand-primary)] to-cyan-600 relative overflow-hidden">
+                                <div
+                                    className="absolute inset-0 opacity-20"
+                                    style={{
+                                        backgroundImage: 'radial-gradient(circle at 20% 20%, white 2px, transparent 2px)',
+                                        backgroundSize: '18px 18px',
+                                    }}
+                                />
+                            </div>
+                            <div className="p-5 -mt-5 relative">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h2 className="font-bold text-lg text-[var(--text-heading)]">{programa.nombre}</h2>
+                                        <p className="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">
+                                            {programa.descripcion || 'Sin descripción disponible'}
+                                        </p>
+                                    </div>
+                                    {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                </div>
+                                <div className="flex items-center gap-4 mt-4 text-xs font-semibold">
+                                    <span>{programa.cantidad_modulos || programa.modulos?.length || 0} módulos</span>
+                                    <span className="text-emerald-700">{formatPrice(programa.precio_contado)}</span>
+                                </div>
+                            </div>
+                        </button>
+                        {expanded && (
+                            <div className="px-5 pb-5 border-t border-[var(--border-color-light)] pt-4">
+                                <h3 className="text-xs font-bold uppercase tracking-wider mb-3">Módulos asociados</h3>
+                                <div className="space-y-2">
+                                    {(programa.modulos || []).map((modulo) => (
+                                        <div key={modulo.id} className="flex items-center justify-between p-3 bg-[var(--bg-body)] rounded-lg text-sm">
+                                            <span className="font-medium">{modulo.nombre}</span>
+                                            <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                                                <Clock size={13} /> {modulo.horas || 0} h
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function ModulosTab({ modulos }) {
+    if (modulos.length === 0) {
+        return <EmptyState message="No hay módulos independientes registrados." />;
+    }
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {modulos.map((modulo) => (
+                <Card key={modulo.id} className="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 className="font-medium text-[var(--text-heading)] text-sm">{modulo.nombre}</h2>
+                        <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">
+                            {modulo.descripcion || 'Módulo académico independiente'}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[var(--text-muted)]">
+                            {modulo.horas && <span className="inline-flex items-center gap-1"><Clock size={13} /> {modulo.horas} h</span>}
+                            {modulo.precio !== undefined && (
+                                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+                                    Bs {Number(modulo.precio).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <span className="px-2.5 py-1 text-xs font-semibold bg-cyan-50 text-cyan-800 rounded">
+                        Módulo
+                    </span>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
+function EmptyState({ message }) {
+    return <div className="text-center py-12 text-sm text-[var(--text-muted)]">{message}</div>;
 }

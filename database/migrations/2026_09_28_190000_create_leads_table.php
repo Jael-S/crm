@@ -41,6 +41,9 @@ return new class extends Migration
             // Auditoría de creación
             $table->foreignId('created_by')->constrained('usuarios', 'id_usuario');
             $table->timestamps();
+            //Nuevas llaves foranes profesion y descuento
+            $table->foreignId('id_profesion')->nullable()->constrained('profesiones', 'id_profesion');
+            $table->foreignId('id_descuento')->nullable()->constrained('descuentos', 'id_descuento');
         });
     }
 

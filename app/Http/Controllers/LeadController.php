@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\OrigenLead;
 use App\Models\Usuario;
 use App\Services\LeadService;
+use App\Services\CatalogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,7 +18,8 @@ use Inertia\Response;
 class LeadController extends Controller
 {
     public function __construct(
-        protected LeadService $leadService
+        protected LeadService $leadService,
+        protected CatalogService $catalogService
     ) {}
 
     /**
@@ -96,8 +98,9 @@ class LeadController extends Controller
             ->get(['id_usuario', 'nombre_completo']);
 
         return Inertia::render('Leads/Show', [
-            'lead' => $lead,
+            'lead' => $lead->load('intereses'),
             'vendedores' => $vendedores,
+            'catalogo' => $this->catalogService->getCatalogCompleto(),
         ]);
     }
 
