@@ -21,7 +21,10 @@ import {
   Shield,
   MessageSquare,
   Plus,
-  Trash2
+  Trash2,
+  XCircle,
+  Briefcase,
+  Percent
 } from 'lucide-react';
 
 export default function LeadsShow({ lead, vendedores = [], catalogo = { programas: [], modulos_sueltos: [] } }) {
@@ -168,15 +171,42 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
           </div>
         </div>
 
+        {/* Banner de Prospecto Descartado / Perdido (RF3.3) */}
+        {(lead.id_etapa === 6 || lead.motivo_perdida || lead.motivoPerdida) && (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-[var(--radius-lg)] text-rose-900 shadow-xs flex items-start gap-3 animate-in fade-in duration-200">
+            <div className="p-2 bg-rose-100 rounded-full text-rose-600 shrink-0">
+              <XCircle size={22} />
+            </div>
+            <div className="flex-1 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-bold text-rose-900">Prospecto Descartado (Etapa Perdido)</h3>
+                <span className="text-xs bg-rose-200 text-rose-900 font-semibold px-2.5 py-0.5 rounded-full">
+                  Motivo: {lead.motivo_perdida?.nombre || lead.motivoPerdida?.nombre || 'No especificado'}
+                </span>
+              </div>
+              {lead.comentario_perdida ? (
+                <p className="text-xs text-rose-700 leading-relaxed bg-white/70 p-2.5 rounded border border-rose-100 mt-2">
+                  <span className="font-semibold text-rose-900 block mb-0.5">Comentario del asesor:</span>
+                  {lead.comentario_perdida}
+                </p>
+              ) : (
+                <p className="text-xs text-rose-700 mt-0.5">
+                  Este prospecto fue marcado como no viable para continuar en el proceso comercial.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Grilla Principal */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Columna Izquierda: Información de Contacto y Estado */}
           <div className="md:col-span-2 space-y-6">
-            {/* Tarjeta de Contacto */}
+            {/* Tarjeta de Contacto y Comercial */}
             <Card>
               <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider mb-4 pb-2 border-b border-[var(--border-color-light)] flex items-center gap-2">
                 <Phone size={16} className="text-[var(--brand-primary)]" />
-                <span>Datos de Contacto</span>
+                <span>Datos de Contacto y Perfil Comercial</span>
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -208,7 +238,83 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
                 </div>
 
                 <div className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                  <span className="text-xs text-[var(--text-muted)] block">Profesión / Ocupación</span>
+                  <span className="text-sm font-semibold text-[var(--text-heading)] block mt-0.5">
+                    {lead.profesion?.nombre || <em className="text-gray-400 font-normal">No especificada</em>}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                  <span className="text-xs text-[var(--text-muted)] block">Descuento Comercial Asignado</span>
+                  <span className="text-sm font-semibold text-[var(--text-heading)] block mt-0.5">
+                    {lead.descuento ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
+                        <Percent size={13} />
+                        {lead.descuento.porcentaje}% - {lead.descuento.nombre}
+                      </span>
+                    ) : (
+                      <em className="text-gray-400 font-normal">Sin descuento aplicado</em>
+                    )}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
                   <span className="text-xs text-[var(--text-muted)] block">Ciudad de Residencia</span>
+                  <span className="text-sm font-semibold text-[var(--text-heading)] block mt-0.5">
+                    {lead.ciudad || <em className="text-gray-400 font-normal">No especificada</em>}
+                  </span>
+                </div>
+
+                {/* Motivo de Pérdida en la tarjeta de contacto si fue descartado */}
+                {lead.id_etapa === 6 && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-[var(--radius-sm)] sm:col-span-2">
+                    <span className="text-xs text-rose-800 font-semibold block">Motivo de Descarte / Pérdida</span>
+                    <span className="text-sm font-bold text-rose-900 block mt-0.5">
+                      {lead.motivo_perdida?.nombre || lead.motivoPerdida?.nombre || 'No especificado'}
+                    </span>
+                    {lead.comentario_perdida && (
+                      <p className="text-xs text-rose-700 mt-1">
+                        <strong className="text-rose-900">Comentario del asesor:</strong> {lead.comentario_perdida}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Tarjeta de Datos Oficiales de Alumno / Matrícula (RF3.4) */}
+            <Card>
+              <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider mb-4 pb-2 border-b border-[var(--border-color-light)] flex items-center gap-2">
+                <UserCheck size={16} className="text-emerald-600" />
+                <span>Datos Oficiales de Alumno (Matrícula)</span>
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                  <span className="text-xs text-[var(--text-muted)] block">Cédula de Identidad (CI)</span>
+                  <span className="text-sm font-mono font-bold text-[var(--text-heading)] block mt-0.5">
+                    {lead.ci ? lead.ci : <em className="text-gray-400 font-normal">Pendiente de registro</em>}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                  <span className="text-xs text-[var(--text-muted)] block">Nombre Completo Oficial</span>
+                  <span className="text-sm font-semibold text-[var(--text-heading)] block mt-0.5">
+                    {lead.nombre_completo || lead.nombre}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                  <span className="text-xs text-[var(--text-muted)] block">Fecha de Nacimiento</span>
+                  <span className="text-sm font-semibold text-[var(--text-heading)] block mt-0.5">
+                    {lead.fecha_nacimiento
+                      ? String(lead.fecha_nacimiento).split('T')[0]
+                      : <em className="text-gray-400 font-normal">Pendiente de registro</em>}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                  <span className="text-xs text-[var(--text-muted)] block">Ciudad Oficial</span>
                   <span className="text-sm font-semibold text-[var(--text-heading)] block mt-0.5">
                     {lead.ciudad || <em className="text-gray-400 font-normal">No especificada</em>}
                   </span>

@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateLeadRequest;
 use App\Models\EtapaPipeline;
 use App\Models\Lead;
 use App\Models\OrigenLead;
+use App\Models\Profesion;
+use App\Models\Descuento;
 use App\Models\Usuario;
 use App\Services\LeadService;
 use App\Services\CatalogService;
@@ -57,6 +59,8 @@ class LeadController extends Controller
     public function create(Request $request): Response
     {
         $origenes = OrigenLead::orderBy('nombre')->get();
+        $profesiones = Profesion::orderBy('nombre')->get();
+        $descuentos = Descuento::activos()->orderBy('nombre')->get();
         $vendedores = Usuario::where('activo', true)
             ->whereHas('rol', fn ($q) => $q->where('nombre', 'Vendedor'))
             ->orderBy('nombre_completo')
@@ -64,6 +68,8 @@ class LeadController extends Controller
 
         return Inertia::render('Leads/Create', [
             'origenes' => $origenes,
+            'profesiones' => $profesiones,
+            'descuentos' => $descuentos,
             'vendedores' => $vendedores,
         ]);
     }
@@ -98,7 +104,7 @@ class LeadController extends Controller
             ->get(['id_usuario', 'nombre_completo']);
 
         return Inertia::render('Leads/Show', [
-            'lead' => $lead->load('intereses'),
+            'lead' => $lead->load(['intereses', 'profesion', 'descuento']),
             'vendedores' => $vendedores,
             'catalogo' => $this->catalogService->getCatalogCompleto(),
         ]);
@@ -118,11 +124,15 @@ class LeadController extends Controller
 
         $origenes = OrigenLead::orderBy('nombre')->get();
         $etapas = EtapaPipeline::orderBy('orden')->get();
+        $profesiones = Profesion::orderBy('nombre')->get();
+        $descuentos = Descuento::activos()->orderBy('nombre')->get();
 
         return Inertia::render('Leads/Edit', [
-            'lead' => $lead,
+            'lead' => $lead->load(['profesion', 'descuento']),
             'origenes' => $origenes,
             'etapas' => $etapas,
+            'profesiones' => $profesiones,
+            'descuentos' => $descuentos,
         ]);
     }
 

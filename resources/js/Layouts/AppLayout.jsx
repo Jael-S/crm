@@ -11,7 +11,9 @@ import {
   X,
   GraduationCap,
   Shield,
-  Layers
+  Layers,
+  Kanban,
+  Share2
 } from 'lucide-react';
 
 export default function AppLayout({ children, title }) {
@@ -46,6 +48,12 @@ export default function AppLayout({ children, title }) {
       roles: ['Administrador', 'Coordinador', 'Vendedor']
     },
     {
+      name: 'Pipeline (Kanban)',
+      href: '/pipeline',
+      icon: Kanban,
+      roles: ['Administrador', 'Coordinador', 'Vendedor']
+    },
+    {
       name: 'Bolsa Común',
       href: '/leads/bolsa-comun',
       icon: Inbox,
@@ -55,6 +63,12 @@ export default function AppLayout({ children, title }) {
       name: 'Importar Leads (CSV)',
       href: '/leads/import',
       icon: FileSpreadsheet,
+      roles: ['Administrador', 'Coordinador']
+    },
+    {
+      name: 'Canales de Origen',
+      href: '/origenes',
+      icon: Share2,
       roles: ['Administrador', 'Coordinador']
     },
     {

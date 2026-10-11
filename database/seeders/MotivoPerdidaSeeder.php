@@ -15,5 +15,9 @@ class MotivoPerdidaSeeder extends Seeder
             ['id_motivo' => 3, 'nombre' => 'Ya no interesado'],
             ['id_motivo' => 4, 'nombre' => 'Sin respuesta'],
         ]);
+
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("SELECT setval(pg_get_serial_sequence('motivos_perdida', 'id_motivo'), COALESCE(MAX(id_motivo), 1)) FROM motivos_perdida;");
+        }
     }
 }
