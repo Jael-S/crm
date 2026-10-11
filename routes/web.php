@@ -11,6 +11,8 @@ use App\Http\Controllers\CsvImportController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\LeadInterestController;
 use App\Http\Controllers\CoordinatorVersionController;
+use App\Http\Controllers\PipelineController;
+use App\Http\Controllers\OrigenLeadController;
 
 // Redirección inicial
 Route::get('/', function () {
@@ -65,6 +67,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/leads/{id}', [LeadController::class, 'show'])->whereNumber('id')->name('leads.show');
         Route::get('/leads/{id}/edit', [LeadController::class, 'edit'])->whereNumber('id')->name('leads.edit');
         Route::put('/leads/{id}', [LeadController::class, 'update'])->whereNumber('id')->name('leads.update');
+
+        // Pipeline Kanban (Administrador, Coordinador y Vendedor)
+        Route::get('/pipeline', [PipelineController::class, 'board'])->name('pipeline.board');
+        Route::patch('/leads/{id}/etapa', [PipelineController::class, 'changeStage'])->whereNumber('id')->name('leads.etapa');
+    });
+
+    // Canales de Origen (Administrador y Coordinador)
+    Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
+        Route::get('/origenes', [OrigenLeadController::class, 'index'])->name('origenes.index');
+        Route::post('/origenes', [OrigenLeadController::class, 'store'])->name('origenes.store');
+        Route::put('/origenes/{id}', [OrigenLeadController::class, 'update'])->whereNumber('id')->name('origenes.update');
+        Route::delete('/origenes/{id}', [OrigenLeadController::class, 'destroy'])->whereNumber('id')->name('origenes.destroy');
     });
 
     // Asignación manual y Transferencias (Administrador y Coordinador - RF2.3 Miriam)

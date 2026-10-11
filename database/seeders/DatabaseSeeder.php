@@ -20,11 +20,13 @@ class DatabaseSeeder extends Seeder
             UsuarioSeeder::class,
         ]);
 
-        // 2. Lookups y Catálogos (Jael)
+        // 2. Lookups y Catálogos (Jael / Nataly / Nicol)
         $this->call([
             EtapaPipelineSeeder::class,
             OrigenLeadSeeder::class,
             MotivoPerdidaSeeder::class,
+            ProfesionSeeder::class,
+            DescuentoSeeder::class,
         ]);
 
         // 3. Leads y Asignaciones Demo (Nicol - Dev B)

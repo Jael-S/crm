@@ -29,6 +29,8 @@ class UpdateLeadRequest extends FormRequest
             'nombre_completo' => ['nullable', 'string', 'max:150'],
             'fecha_nacimiento' => ['nullable', 'date'],
             'ciudad' => ['nullable', 'string', 'max:60'],
+            'id_profesion' => ['nullable', 'integer', 'exists:profesiones,id_profesion'],
+            'id_descuento' => ['nullable', 'integer', 'exists:descuentos,id_descuento'],
         ];
     }
 
@@ -47,6 +49,8 @@ class UpdateLeadRequest extends FormRequest
             'id_origen.exists' => 'El origen seleccionado no es válido.',
             'id_etapa.exists' => 'La etapa seleccionada no es válida.',
             'fecha_nacimiento.date' => 'La fecha de nacimiento no tiene un formato de fecha válido.',
+            'id_profesion.exists' => 'La profesión seleccionada no es válida.',
+            'id_descuento.exists' => 'El descuento seleccionado no es válido.',
         ];
     }
 }

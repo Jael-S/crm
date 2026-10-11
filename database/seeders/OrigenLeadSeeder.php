@@ -15,5 +15,9 @@ class OrigenLeadSeeder extends Seeder
             ['id_origen' => 3, 'nombre' => 'Web'],
             ['id_origen' => 4, 'nombre' => 'Referido'],
         ]);
+
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("SELECT setval(pg_get_serial_sequence('origenes_lead', 'id_origen'), COALESCE(MAX(id_origen), 1)) FROM origenes_lead;");
+        }
     }
 }

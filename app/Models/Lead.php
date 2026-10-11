@@ -29,6 +29,8 @@ class Lead extends Model
         'nombre_completo',
         'fecha_nacimiento',
         'ciudad',
+        'id_profesion',
+        'id_descuento',
         'created_by',
     ];
 
@@ -93,6 +95,22 @@ class Lead extends Model
     public function intereses(): HasMany
     {
         return $this->hasMany(LeadInteres::class, 'id_lead', 'id_lead');
+    }
+
+    /**
+     * Profesión única del prospecto
+     */
+    public function profesion(): BelongsTo
+    {
+        return $this->belongsTo(Profesion::class, 'id_profesion', 'id_profesion');
+    }
+
+    /**
+     * Descuento comercial asignado al prospecto (máximo 1)
+     */
+    public function descuento(): BelongsTo
+    {
+        return $this->belongsTo(Descuento::class, 'id_descuento', 'id_descuento');
     }
 
     /**

@@ -12,21 +12,24 @@ import {
   Share2,
   Layers,
   MapPin,
-  CreditCard,
+  Briefcase,
+  Percent,
   Calendar
 } from 'lucide-react';
 
-export default function LeadsEdit({ lead, origenes = [], etapas = [] }) {
+export default function LeadsEdit({ lead, origenes = [], etapas = [], profesiones = [], descuentos = [] }) {
   const { data, setData, put, processing, errors } = useForm({
     nombre: lead.nombre || '',
     telefono: lead.telefono || '',
     correo: lead.correo || '',
     id_origen: lead.id_origen || '',
     id_etapa: lead.id_etapa || '',
+    id_profesion: lead.id_profesion || '',
+    id_descuento: lead.id_descuento || '',
     ci: lead.ci || '',
     nombre_completo: lead.nombre_completo || '',
     ciudad: lead.ciudad || '',
-    fecha_nacimiento: lead.fecha_nacimiento || '',
+    fecha_nacimiento: lead.fecha_nacimiento ? String(lead.fecha_nacimiento).split('T')[0] : '',
   });
 
   const handleSubmit = (e) => {
@@ -162,6 +165,53 @@ export default function LeadsEdit({ lead, origenes = [], etapas = [] }) {
                     ))}
                   </select>
                 </div>
+              </div>
+            </div>
+
+            {/* Profesión y Descuento Comercial */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1.5">
+                  Profesión / Ocupación
+                </label>
+                <div className="relative">
+                  <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-secondary)]" />
+                  <select
+                    value={data.id_profesion}
+                    onChange={(e) => setData('id_profesion', e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[#7aa5ff]"
+                  >
+                    <option value="">-- Sin profesión seleccionada --</option>
+                    {profesiones.map((p) => (
+                      <option key={p.id_profesion} value={p.id_profesion}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.id_profesion && <p className="text-xs text-red-500 mt-1">{errors.id_profesion}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1.5">
+                  Descuento Comercial Asignado
+                </label>
+                <div className="relative">
+                  <Percent size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-secondary)]" />
+                  <select
+                    value={data.id_descuento}
+                    onChange={(e) => setData('id_descuento', e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[#7aa5ff]"
+                  >
+                    <option value="">-- Sin descuento comercial --</option>
+                    {descuentos.map((d) => (
+                      <option key={d.id_descuento} value={d.id_descuento}>
+                        {d.porcentaje}% - {d.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.id_descuento && <p className="text-xs text-red-500 mt-1">{errors.id_descuento}</p>}
               </div>
             </div>
 

@@ -26,6 +26,8 @@ class StoreLeadRequest extends FormRequest
             'correo' => ['nullable', 'string', 'email', 'max:120'],
             'id_origen' => ['required', 'integer', 'exists:origenes_lead,id_origen'],
             'id_vendedor' => ['nullable', 'integer', 'exists:usuarios,id_usuario'],
+            'id_profesion' => ['nullable', 'integer', 'exists:profesiones,id_profesion'],
+            'id_descuento' => ['nullable', 'integer', 'exists:descuentos,id_descuento'],
         ];
     }
 
@@ -44,6 +46,8 @@ class StoreLeadRequest extends FormRequest
             'id_origen.required' => 'Debe seleccionar un canal de origen.',
             'id_origen.exists' => 'El origen seleccionado no es válido.',
             'id_vendedor.exists' => 'El vendedor seleccionado no existe.',
+            'id_profesion.exists' => 'La profesión seleccionada no es válida.',
+            'id_descuento.exists' => 'El descuento seleccionado no es válido.',
         ];
     }
 }
