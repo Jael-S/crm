@@ -97,6 +97,26 @@ class Lead extends Model
         return $this->hasMany(LeadInteres::class, 'id_lead', 'id_lead');
     }
 
+    public function bitacoras(): HasMany
+    {
+        return $this->hasMany(Bitacora::class, 'id_lead', 'id_lead')->orderBy('created_at', 'desc');
+    }
+
+    public function recordatorios(): HasMany
+    {
+        return $this->hasMany(Recordatorio::class, 'id_lead', 'id_lead')->orderBy('fecha_hora', 'asc');
+    }
+
+    public function comprobantes(): HasMany
+    {
+        return $this->hasMany(ComprobantePago::class, 'id_lead', 'id_lead')->orderBy('created_at', 'desc');
+    }
+
+    public function enviosMatricula(): HasMany
+    {
+        return $this->hasMany(EnvioMatricula::class, 'id_lead', 'id_lead')->orderBy('created_at', 'desc');
+    }
+
     /**
      * Profesión única del prospecto
      */

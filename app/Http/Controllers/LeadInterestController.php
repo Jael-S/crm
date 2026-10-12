@@ -89,9 +89,9 @@ class LeadInterestController extends Controller
      */
     public function destroy(int $id, int$interesId): RedirectResponse
     {
-        $interes = LeadInteres::where('id_interes',$interesId)
+        $interes = LeadInteres::where('id_interes', $interesId)
             ->where('id_lead', $id)
-            ->findOrFail();
+            ->firstOrFail();
 
         $interes->delete();
 

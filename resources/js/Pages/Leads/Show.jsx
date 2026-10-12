@@ -24,7 +24,13 @@ import {
   Trash2,
   XCircle,
   Briefcase,
-  Percent
+  Percent,
+  FileText,
+  UploadCloud,
+  Bell,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink
 } from 'lucide-react';
 
 export default function LeadsShow({ lead, vendedores = [], catalogo = { programas: [], modulos_sueltos: [] } }) {
@@ -54,6 +60,39 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
     id_vendedor: vendedores[0]?.id_usuario || '',
     motivo: '',
   });
+
+  // Modales y formularios de Nataly (Fase 2 y 3)
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [reminderModalOpen, setReminderModalOpen] = useState(false);
+
+  const noteForm = useForm({
+    descripcion: '',
+  });
+
+  const reminderForm = useForm({
+    fecha_hora: '',
+    descripcion: '',
+  });
+
+  const handleNoteSubmit = (e) => {
+    e.preventDefault();
+    noteForm.post(`/leads/${lead.id_lead}/notas`, {
+      onSuccess: () => {
+        setNoteModalOpen(false);
+        noteForm.reset();
+      },
+    });
+  };
+
+  const handleReminderSubmit = (e) => {
+    e.preventDefault();
+    reminderForm.post(`/leads/${lead.id_lead}/recordatorios`, {
+      onSuccess: () => {
+        setReminderModalOpen(false);
+        reminderForm.reset();
+      },
+    });
+  };
 
   const handleAssignSubmit = (e) => {
     e.preventDefault();
@@ -161,10 +200,28 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setNoteModalOpen(true)}
+              className="flex items-center gap-1.5 text-xs py-2"
+            >
+              <MessageSquare size={14} />
+              <span>Agregar Nota</span>
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => setReminderModalOpen(true)}
+              className="flex items-center gap-1.5 text-xs py-2"
+            >
+              <Bell size={14} />
+              <span>Recordatorio</span>
+            </Button>
+
             <Link href={`/leads/${lead.id_lead}/edit`}>
-              <Button variant="secondary" className="flex items-center gap-1.5 text-xs py-2">
-                <Edit2 size={15} />
+              <Button variant="primary" className="flex items-center gap-1.5 text-xs py-2">
+                <Edit2 size={14} />
                 <span>Editar Datos</span>
               </Button>
             </Link>
@@ -322,32 +379,225 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
               </div>
             </Card>
 
+            {/* Tarjeta de Programas y Módulos de Interés (Jael - RF2.2) */}
             <Card>
               <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-color-light)]">
                 <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider flex items-center gap-2">
                   <MessageSquare size={16} className="text-[var(--brand-primary)]" />
                   <span>Programas y Módulos de Interés</span>
                 </h2>
-                <Button onClick={() => setInterestModalOpen(true)} className="text-xs py-2">
+                <Button onClick={() => setInterestModalOpen(true)} className="text-xs py-1.5">
                   <Plus size={14} className="mr-1" /> Agregar Interés
                 </Button>
               </div>
-              {lead.intereses?.length ? (
+
+              {lead.intereses && lead.intereses.length > 0 ? (
                 <div className="space-y-2">
                   {lead.intereses.map((interes) => (
-                    <div key={interes.id_interes} className="flex items-center justify-between gap-3 p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)]">
+                    <div
+                      key={interes.id_interes}
+                      className="flex items-center justify-between gap-3 p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)] border border-[var(--border-color-light)]"
+                    >
                       <div>
-                        <span className="text-[10px] font-bold text-[var(--brand-primary)]">{interes.tipo}</span>
-                        <p className="text-sm font-semibold text-[var(--text-heading)]">{interes.nombre_snapshot}</p>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                          {interes.tipo}
+                        </span>
+                        <p className="text-sm font-semibold text-[var(--text-heading)] mt-1">
+                          {interes.nombre_snapshot}
+                        </p>
                       </div>
-                      <button type="button" onClick={() => removeInterest(interes.id_interes)} className="text-rose-600 hover:text-rose-800" title="Eliminar interés">
+                      <button
+                        type="button"
+                        onClick={() => removeInterest(interes.id_interes)}
+                        className="text-rose-600 hover:text-rose-800 p-1 rounded hover:bg-rose-50 transition"
+                        title="Eliminar interés"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-[var(--text-muted)]">No hay intereses registrados.</p>
+                <div className="text-center py-4 space-y-2">
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Este prospecto no tiene programas ni módulos de interés vinculados aún.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setInterestModalOpen(true)}
+                    className="text-xs py-1.5 mx-auto"
+                  >
+                    <Plus size={14} className="mr-1" /> Vincular Interés Ahora
+                  </Button>
+                </div>
+              )}
+            </Card>
+
+            {/* Tarjeta de Comprobantes de Pago y Despacho de Matrícula (RF3.4 / RF4.1 / Fase 3) */}
+            <Card>
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-color-light)]">
+                <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider flex items-center gap-2">
+                  <UploadCloud size={16} className="text-emerald-600" />
+                  <span>Comprobantes de Pago y Matrícula</span>
+                </h2>
+                {lead.id_etapa === 4 && (user?.rol?.nombre === 'Administrador' || user?.rol?.nombre === 'Vendedor') && (
+                  <Link
+                    href="/pagos/revision"
+                    className="text-xs font-semibold text-[var(--brand-primary)] hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Ir a Revisión de Pagos</span>
+                    <ExternalLink size={12} />
+                  </Link>
+                )}
+              </div>
+
+              {lead.comprobantes && lead.comprobantes.length > 0 ? (
+                <div className="space-y-3">
+                  {lead.comprobantes.map((comp) => (
+                    <div
+                      key={comp.id_comprobante}
+                      className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)] border border-[var(--border-color-light)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={comp.estado === 'APROBADO' ? 'success' : comp.estado === 'RECHAZADO' ? 'danger' : 'warning'}>
+                            {comp.estado}
+                          </Badge>
+                          <span className="text-sm font-bold text-[var(--text-heading)]">
+                            {comp.monto ? `Bs. ${comp.monto}` : 'Monto no declarado'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">
+                          Subido por: {comp.subido_por?.nombre_completo || 'Asesor'} el {new Date(comp.created_at).toLocaleString()}
+                        </p>
+                        {comp.comentario_rechazo && (
+                          <p className="text-xs text-rose-600 mt-1">
+                            Motivo de rechazo: {comp.comentario_rechazo}
+                          </p>
+                        )}
+                        {/* Estado del envío de matrícula si existe */}
+                        {comp.envio_matricula && (
+                          <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
+                            <span>Estado Matrícula Grupo 6SC:</span>
+                            <Badge variant={comp.envio_matricula.estado === 'ENVIADO' ? 'success' : 'danger'}>
+                              {comp.envio_matricula.estado}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={comp.archivo_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-[var(--brand-primary)] hover:underline inline-flex items-center gap-1"
+                        >
+                          <FileText size={14} />
+                          <span>Ver {comp.tipo_archivo}</span>
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)] py-2 text-center">
+                  No se han registrado comprobantes de pago aún.
+                </p>
+              )}
+            </Card>
+
+            {/* Tarjeta de Recordatorios y Tareas Comerciales (RF4.3) */}
+            <Card>
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-color-light)]">
+                <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider flex items-center gap-2">
+                  <Bell size={16} className="text-amber-600" />
+                  <span>Recordatorios de Contacto</span>
+                </h2>
+                <Button onClick={() => setReminderModalOpen(true)} className="text-xs py-1.5">
+                  <Plus size={14} className="mr-1" /> Agendar Alerta
+                </Button>
+              </div>
+
+              {lead.recordatorios && lead.recordatorios.length > 0 ? (
+                <div className="space-y-2">
+                  {lead.recordatorios.map((rec) => (
+                    <div
+                      key={rec.id_recordatorio}
+                      className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)] border border-[var(--border-color-light)] flex items-center justify-between gap-2"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={rec.estado === 'COMPLETADO' ? 'success' : 'warning'}>
+                            {rec.estado}
+                          </Badge>
+                          <span className="text-xs font-semibold text-[var(--text-heading)]">
+                            {new Date(rec.fecha_hora).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">{rec.descripcion}</p>
+                      </div>
+
+                      {rec.estado === 'PENDIENTE' && (
+                        <Link
+                          href={`/recordatorios/${rec.id_recordatorio}/completar`}
+                          method="patch"
+                          as="button"
+                          className="text-xs font-semibold text-emerald-600 hover:text-emerald-800"
+                        >
+                          Listo
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)] py-2 text-center">
+                  No hay recordatorios agendados para este prospecto.
+                </p>
+              )}
+            </Card>
+
+            {/* Línea de Tiempo de Bitácora Oficial (RF4.1 / RF4.2) */}
+            <Card>
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-color-light)]">
+                <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider flex items-center gap-2">
+                  <History size={16} className="text-[var(--brand-primary)]" />
+                  <span>Bitácora de Trazabilidad e Historial</span>
+                </h2>
+                <Button onClick={() => setNoteModalOpen(true)} className="text-xs py-1.5">
+                  <Plus size={14} className="mr-1" /> Agregar Nota
+                </Button>
+              </div>
+
+              {lead.bitacoras && lead.bitacoras.length > 0 ? (
+                <div className="relative border-l-2 border-[var(--border-color-dark)] ml-3 pl-4 space-y-4 my-2">
+                  {lead.bitacoras.map((evento) => (
+                    <div key={evento.id_evento} className="relative">
+                      <div className="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-[var(--brand-primary)] border-2 border-white" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-800 uppercase">
+                            {evento.tipo}
+                          </span>
+                          <span className="text-xs text-[var(--text-muted)]">
+                            {new Date(evento.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--text-heading)] font-medium mt-1">
+                          {evento.descripcion}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          Registrado por: {evento.usuario?.nombre_completo || 'Sistema'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)] py-2 text-center">
+                  No hay eventos registrados en la bitácora aún.
+                </p>
               )}
             </Card>
 
@@ -606,6 +856,92 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
             </div>
           </form>
         </Modal>
+
+        {/* Modal: Agregar Nota a la Bitácora */}
+        <Modal
+          isOpen={noteModalOpen}
+          onClose={() => setNoteModalOpen(false)}
+          title="Agregar Nota a la Bitácora"
+        >
+          <form onSubmit={handleNoteSubmit} className="space-y-4">
+            <p className="text-xs text-[var(--text-muted)]">
+              Registra los detalles de una llamada, mensaje o seguimiento comercial realizado con este prospecto.
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
+                Contenido de la Nota <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={4}
+                placeholder="Ej. El cliente solicita que le enviemos el plan de estudios y consultará el arancel con su empresa..."
+                value={noteForm.data.descripcion}
+                onChange={(e) => noteForm.setData('descripcion', e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--brand-primary)]"
+                required
+              />
+            </div>
+
+            <div className="pt-3 border-t border-[var(--border-color-light)] flex justify-end gap-2">
+              <Button variant="ghost" type="button" onClick={() => setNoteModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={noteForm.processing}>
+                {noteForm.processing ? 'Guardando...' : 'Registrar Nota'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+
+        {/* Modal: Agendar Recordatorio */}
+        <Modal
+          isOpen={reminderModalOpen}
+          onClose={() => setReminderModalOpen(false)}
+          title="Agendar Recordatorio Comercial"
+        >
+          <form onSubmit={handleReminderSubmit} className="space-y-4">
+            <p className="text-xs text-[var(--text-muted)]">
+              Programa una fecha y hora para realizar una llamada o seguimiento futuro.
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
+                Fecha y Hora de la Alerta <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={reminderForm.data.fecha_hora}
+                onChange={(e) => reminderForm.setData('fecha_hora', e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--brand-primary)]"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
+                Descripción de la Tarea <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. Llamar para verificar depósito bancario..."
+                value={reminderForm.data.descripcion}
+                onChange={(e) => reminderForm.setData('descripcion', e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--brand-primary)]"
+                required
+              />
+            </div>
+
+            <div className="pt-3 border-t border-[var(--border-color-light)] flex justify-end gap-2">
+              <Button variant="ghost" type="button" onClick={() => setReminderModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={reminderForm.processing}>
+                {reminderForm.processing ? 'Agendando...' : 'Guardar Recordatorio'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+
       </div>
     </AppLayout>
   );

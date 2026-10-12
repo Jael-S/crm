@@ -104,7 +104,19 @@ class LeadController extends Controller
             ->get(['id_usuario', 'nombre_completo']);
 
         return Inertia::render('Leads/Show', [
-            'lead' => $lead->load(['intereses', 'profesion', 'descuento']),
+            'lead' => $lead->load([
+                'intereses',
+                'profesion',
+                'descuento',
+                'bitacoras.usuario',
+                'bitacoras.etapaAnterior',
+                'bitacoras.etapaNueva',
+                'recordatorios.usuario',
+                'comprobantes.subidoPor',
+                'comprobantes.revisadoPor',
+                'comprobantes.envioMatricula',
+                'enviosMatricula',
+            ]),
             'vendedores' => $vendedores,
             'catalogo' => $this->catalogService->getCatalogCompleto(),
         ]);
