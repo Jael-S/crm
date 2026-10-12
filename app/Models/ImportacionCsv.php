@@ -46,4 +46,10 @@ class ImportacionCsv extends Model
     {
         return $this->hasMany(Lead::class, 'id_importacion', 'id_importacion');
     }
+
+    public function errores(): HasMany
+    {
+        return $this->hasMany(ImportacionCsvError::class, 'id_importacion', 'id_importacion')
+            ->orderBy('numero_linea');
+    }
 }

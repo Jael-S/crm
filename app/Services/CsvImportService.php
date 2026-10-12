@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ImportacionCsv;
 use App\Models\OrigenLead;
+use App\Models\Profesion;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,7 +16,8 @@ class CsvImportService
 
     /**
      * Procesa un CSV de prospectos fila por fila.
-     * Formato esperado: nombre,telefono,correo,id_origen
+     * Las columnas pueden venir con cabecera. residencia se ignora porque no
+     * existe como atributo persistible de Lead.
      *
      * @return array{importacion: ImportacionCsv, errores: list<string>}
      */
@@ -28,14 +30,10 @@ class CsvImportService
             throw new \RuntimeException('No se pudo abrir el archivo CSV.');
         }
 
-        $origenesValidos = OrigenLead::query()
-            ->pluck('id_origen')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        // Saltar cabecera si la primera fila parece títulos
         $primera = fgetcsv($handle, 0, ',');
-        if ($primera !== false && ! $this->pareceCabecera($primera)) {
+        $cabecera = $primera !== false && $this->pareceCabecera($primera);
+        $columnas = $cabecera ? $this->normalizarCabecera($primera) : null;
+        if (! $cabecera) {
             rewind($handle);
         }
 
@@ -51,7 +49,7 @@ class CsvImportService
         $filasExitosas = 0;
         $filasFallidas = 0;
         $errores = [];
-        $numeroFila = 1; // tras cabecera (si hubo)
+        $numeroFila = 0;
 
         try {
             while (($row = fgetcsv($handle, 0, ',')) !== false) {
@@ -64,11 +62,12 @@ class CsvImportService
 
                 $totalFilas++;
 
-                $datos = $this->mapearFila($row);
-                $errorFila = $this->validarFila($datos, $origenesValidos);
+                $datos = $this->mapearFila($row, $columnas);
+                $errorFila = $this->validarFila($datos);
 
                 if ($errorFila !== null) {
                     $filasFallidas++;
+                    $this->registrarError($importacion, $numeroFila, $errorFila);
                     $errores[] = "Fila {$numeroFila}: {$errorFila}";
                     continue;
                 }
@@ -79,6 +78,9 @@ class CsvImportService
                         'telefono' => $datos['telefono'],
                         'correo' => $datos['correo'],
                         'id_origen' => $datos['id_origen'],
+                        'ci' => $datos['ci'],
+                        'ciudad' => $datos['ciudad'],
+                        'id_profesion' => $datos['id_profesion'],
                         'id_vendedor' => null,
                         'id_importacion' => $importacion->id_importacion,
                     ], $userId);
@@ -86,7 +88,9 @@ class CsvImportService
                     $filasExitosas++;
                 } catch (\Throwable $e) {
                     $filasFallidas++;
-                    $errores[] = "Fila {$numeroFila}: no se pudo registrar el prospecto ({$e->getMessage()}).";
+                    $motivo = 'no se pudo registrar el prospecto: '.$e->getMessage();
+                    $this->registrarError($importacion, $numeroFila, $motivo);
+                    $errores[] = "Fila {$numeroFila}: {$motivo}";
                 }
             }
         } finally {
@@ -100,16 +104,15 @@ class CsvImportService
         ]);
 
         return [
-            'importacion' => $importacion->fresh(),
+            'importacion' => $importacion->fresh('errores'),
             'errores' => array_slice($errores, 0, 50),
         ];
     }
 
     private function pareceCabecera(array $row): bool
     {
-        $primera = strtolower(trim((string) ($row[0] ?? '')));
-
-        return in_array($primera, ['nombre', 'name', 'prospecto'], true);
+        $valores = array_map(fn ($value) => $this->normalizarNombreColumna($value), $row);
+        return in_array('nombre', $valores, true) || in_array('telefono', $valores, true);
     }
 
     private function filaVacia(array $row): bool
@@ -126,43 +129,157 @@ class CsvImportService
     /**
      * @return array{nombre: string, telefono: string, correo: ?string, id_origen: int}
      */
-    private function mapearFila(array $row): array
+    private function mapearFila(array $row, ?array $columnas): array
     {
-        $correo = isset($row[2]) ? trim((string) $row[2]) : '';
-        $origenRaw = isset($row[3]) ? trim((string) $row[3]) : '';
+        $valores = [];
+        if ($columnas !== null) {
+            foreach ($columnas as $indice => $nombre) {
+                $valores[$nombre] = trim((string) ($row[$indice] ?? ''));
+            }
+        } elseif (count($row) <= 4) {
+            // Compatibilidad con el formato anterior: nombre,telefono,correo,id_origen.
+            $valores = [
+                'nombre' => trim((string) ($row[0] ?? '')),
+                'telefono' => trim((string) ($row[1] ?? '')),
+                'correo' => trim((string) ($row[2] ?? '')),
+                'id_origen' => trim((string) ($row[3] ?? '')),
+            ];
+        } else {
+            $valores = [
+                'nombre' => trim((string) ($row[0] ?? '')),
+                'telefono' => trim((string) ($row[1] ?? '')),
+                'id_origen' => trim((string) ($row[2] ?? '')),
+                'ci' => trim((string) ($row[3] ?? '')),
+                'profesion' => trim((string) ($row[4] ?? '')),
+                'ciudad' => trim((string) ($row[5] ?? '')),
+                'correo' => trim((string) ($row[6] ?? '')),
+            ];
+        }
+
+        $origenRaw = $valores['id_origen'] ?? $valores['origen'] ?? '';
+        $profesionRaw = $valores['id_profesion'] ?? $valores['profesion'] ?? '';
 
         return [
-            'nombre' => trim((string) ($row[0] ?? '')),
-            'telefono' => trim((string) ($row[1] ?? '')),
-            'correo' => $correo === '' ? null : $correo,
-            'id_origen' => $origenRaw === '' ? 1 : (int) $origenRaw,
+            'nombre' => $valores['nombre'] ?? '',
+            'telefono' => $valores['telefono'] ?? '',
+            'correo' => ($valores['correo'] ?? '') === '' ? null : $valores['correo'],
+            'id_origen_raw' => $origenRaw,
+            'id_profesion_raw' => $profesionRaw === '' ? '' : $profesionRaw,
+            'id_origen' => null,
+            'id_profesion' => null,
+            'ci' => ($valores['ci'] ?? '') === '' ? null : $valores['ci'],
+            'ciudad' => ($valores['ciudad'] ?? '') === '' ? null : $valores['ciudad'],
         ];
     }
 
-    private function validarFila(array $datos, array $origenesValidos): ?string
+    private function validarFila(array &$datos): ?string
     {
         $validator = Validator::make($datos, [
             'nombre' => ['required', 'string', 'max:120'],
             'telefono' => ['required', 'string', 'max:20'],
             'correo' => ['nullable', 'email', 'max:120'],
-            'id_origen' => ['required', 'integer'],
+            'id_origen_raw' => ['required', 'string', 'max:50'],
+            'ci' => ['nullable', 'string', 'max:20'],
+            'ciudad' => ['nullable', 'string', 'max:60'],
+            'id_profesion_raw' => ['nullable', 'string', 'max:100'],
         ], [
             'nombre.required' => 'el nombre es obligatorio',
             'nombre.max' => 'el nombre supera 120 caracteres',
             'telefono.required' => 'el teléfono es obligatorio',
             'telefono.max' => 'el teléfono supera 20 caracteres',
             'correo.email' => 'el correo no es válido',
-            'id_origen.required' => 'el origen es obligatorio',
+            'id_origen_raw.required' => 'el origen es obligatorio',
         ]);
 
         if ($validator->fails()) {
             return $validator->errors()->first();
         }
 
-        if (! in_array((int) $datos['id_origen'], $origenesValidos, true)) {
-            return "el origen #{$datos['id_origen']} no existe (use IDs de la tabla origenes_lead)";
+        $origen = $this->resolverOrigen($datos['id_origen_raw']);
+        if ($origen === null) {
+            return "el origen '{$datos['id_origen_raw']}' no pudo registrarse";
+        }
+        $datos['id_origen'] = $origen->id_origen;
+
+        if ($datos['id_profesion_raw'] !== '') {
+            $profesion = $this->resolverProfesion($datos['id_profesion_raw']);
+            if ($profesion === null) {
+                return "la profesión con ID '{$datos['id_profesion_raw']}' no existe";
+            }
+            $datos['id_profesion'] = $profesion->id_profesion;
         }
 
         return null;
+    }
+
+    private function resolverOrigen(string $valor): ?OrigenLead
+    {
+        $valor = trim($valor);
+
+        if (is_numeric($valor)) {
+            return OrigenLead::find((int) $valor);
+        }
+
+        return OrigenLead::whereRaw('LOWER(TRIM(nombre)) = ?', [mb_strtolower($valor)])->first()
+            ?? OrigenLead::create(['nombre' => $valor]);
+    }
+
+    private function resolverProfesion(string $valor): ?Profesion
+    {
+        $valor = trim($valor);
+
+        if (is_numeric($valor)) {
+            $profesion = Profesion::find((int) $valor);
+            if ($profesion !== null) {
+                return $profesion;
+            }
+
+            return null;
+        } else {
+            $profesion = Profesion::whereRaw('LOWER(TRIM(nombre)) = ?', [mb_strtolower($valor)])->first();
+            if ($profesion !== null) {
+                return $profesion;
+            }
+        }
+
+        return Profesion::create(['nombre' => $valor]);
+    }
+
+    private function normalizarCabecera(array $row): array
+    {
+        return array_map(function ($value) {
+            $nombre = $this->normalizarNombreColumna($value);
+            return match ($nombre) {
+                'origen', 'nombreorigen' => 'origen',
+                'profesion', 'nombreprofesion' => 'profesion',
+                'residencia' => 'residencia',
+                default => $nombre,
+            };
+        }, $row);
+    }
+
+    private function normalizarNombreColumna(mixed $value): string
+    {
+        $nombre = mb_strtolower(trim((string) $value, " \t\n\r\0\x0B\xEF\xBB\xBF"));
+        $nombre = strtr($nombre, [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'ü' => 'u',
+        ]);
+        $nombre = str_replace([' ', '-', '.'], '_', $nombre);
+        return match ($nombre) {
+            'id_origen', 'origen_id' => 'id_origen',
+            'origen_nombre', 'nombre_origen' => 'origen',
+            'id_profesion', 'profesion_id' => 'id_profesion',
+            'profesion_nombre', 'nombre_profesion' => 'profesion',
+            default => $nombre,
+        };
+    }
+
+    private function registrarError(ImportacionCsv $importacion, int $linea, string $motivo): void
+    {
+        $importacion->errores()->create([
+            'numero_linea' => $linea,
+            'motivo' => $motivo,
+        ]);
     }
 }
