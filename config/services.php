@@ -37,4 +37,7 @@ return [
     'catalog_api' => [
         'url' => env('CATALOG_API_URL', 'https://proyecto-l1e0.onrender.com/api/v1/catalogo'),
     ],
+    'enrollment_api' => [
+        'url' => env('ENROLLMENT_API_URL', 'https://proyecto-l1e0.onrender.com/api/v1/matriculas'),
+    ],
 ];

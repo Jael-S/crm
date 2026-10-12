@@ -27,12 +27,14 @@ class CatalogService
                 $data = $response->json();
 
                 $programas = collect($data['programas'] ?? [])->map(function ($programa) {
-                    $programa['versiones'] = collect($programa['cohortes'] ?? [])->map(function ($cohorte) {
+                    $precioContado = (float) ($programa['precio_contado'] ?? 0);
+                    $programa['versiones'] = collect($programa['cohortes'] ?? [])->map(function ($cohorte) use ($precioContado) {
                         return [
                             'id' => $cohorte['id'],
                             'nombre' => $cohorte['nombre'],
                             'estado' => $cohorte['estado'] ?? null,
                             'fecha_inicio' => $cohorte['fecha_inicio'] ?? null,
+                            'precio' => $precioContado,
                         ];
                     })->toArray();
 
