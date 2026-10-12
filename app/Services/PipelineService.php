@@ -25,6 +25,7 @@ class PipelineService
             'descuento',
             'intereses',
             'motivoPerdida',
+            'comprobantes',
         ]);
 
         // Alcance por rol

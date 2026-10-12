@@ -13,6 +13,10 @@ use App\Http\Controllers\LeadInterestController;
 use App\Http\Controllers\CoordinatorVersionController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\OrigenLeadController;
+use App\Http\Controllers\DescuentoController;
+use App\Http\Controllers\BitacoraController;
+use App\Http\Controllers\RecordatorioController;
+use App\Http\Controllers\PaymentController;
 
 // Redirección inicial
 Route::get('/', function () {
@@ -105,12 +109,43 @@ Route::middleware('auth')->group(function () {
     Route::post('/leads/{id}/intereses', [LeadInterestController::class, 'store'])->name('leads.intereses.store');
     Route::delete('/leads/{id}/intereses/{interesId}', [LeadInterestController::class, 'destroy'])->name('leads.intereses.destroy');
     });
-    //Control de versiones de coordinadores (Administrador)
+    // Control de versiones de coordinadores (Administrador)
     Route::middleware('checkRole:Administrador')->group(function () {
-    Route::get('/coordinadores/versiones', [CoordinatorVersionController::class, 'assignmentIndex'])->name('coordinadores.versiones.assignment');
-    Route::get('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'index'])->name('coordinadores.versiones.index');
-    Route::post('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'store'])->name('coordinadores.versiones.store');
-    Route::delete('/coordinadores/{id}/versiones/{version}', [CoordinatorVersionController::class, 'destroy'])->name('coordinadores.versiones.destroy');
-    Route::put('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'update'])->name('coordinadores.versiones.update');
+        Route::get('/coordinadores/versiones', [CoordinatorVersionController::class, 'assignmentIndex'])->name('coordinadores.versiones.assignment');
+        Route::get('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'index'])->name('coordinadores.versiones.index');
+        Route::post('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'store'])->name('coordinadores.versiones.store');
+        Route::delete('/coordinadores/{id}/versiones/{version}', [CoordinatorVersionController::class, 'destroy'])->name('coordinadores.versiones.destroy');
+        Route::put('/coordinadores/{id}/versiones', [CoordinatorVersionController::class, 'update'])->name('coordinadores.versiones.update');
+
+        // Módulo Descuentos (Administrador)
+        Route::get('/descuentos', [DescuentoController::class, 'index'])->name('descuentos.index');
+        Route::post('/descuentos', [DescuentoController::class, 'store'])->name('descuentos.store');
+        Route::put('/descuentos/{id}', [DescuentoController::class, 'update'])->whereNumber('id')->name('descuentos.update');
+        Route::patch('/descuentos/{id}/toggle', [DescuentoController::class, 'toggle'])->whereNumber('id')->name('descuentos.toggle');
+
+        // Acciones de Aprobación/Rechazo de Pagos (Solo Administrador)
+        Route::post('/pagos/{id}/aprobar', [PaymentController::class, 'approve'])->whereNumber('id')->name('pagos.approve');
+        Route::post('/pagos/{id}/rechazar', [PaymentController::class, 'reject'])->whereNumber('id')->name('pagos.reject');
+        Route::post('/pagos/envios/{id}/reintentar', [PaymentController::class, 'retryEnrollment'])->whereNumber('id')->name('pagos.envios.reintentar');
+    });
+
+    // Revisión y Seguimiento de Pagos (Administrador y Vendedor)
+    Route::middleware('checkRole:Administrador,Vendedor')->group(function () {
+        Route::get('/pagos/revision', [PaymentController::class, 'reviewQueue'])->name('pagos.review');
+    });
+
+    // Módulo Bitácora, Recordatorios y Pagos (Auth general o por rol)
+    Route::middleware('checkRole:Administrador,Coordinador,Vendedor')->group(function () {
+        // Bitácora y Notas
+        Route::get('/leads/{id}/bitacora', [BitacoraController::class, 'timeline'])->whereNumber('id')->name('leads.bitacora');
+        Route::post('/leads/{id}/notas', [BitacoraController::class, 'addNote'])->whereNumber('id')->name('leads.notas.store');
+
+        // Recordatorios
+        Route::get('/recordatorios', [RecordatorioController::class, 'index'])->name('recordatorios.index');
+        Route::post('/leads/{id}/recordatorios', [RecordatorioController::class, 'store'])->whereNumber('id')->name('leads.recordatorios.store');
+        Route::patch('/recordatorios/{id}/completar', [RecordatorioController::class, 'completar'])->whereNumber('id')->name('recordatorios.completar');
+
+        // Subir Comprobante de Pago
+        Route::post('/leads/{id}/comprobantes', [PaymentController::class, 'store'])->whereNumber('id')->name('leads.comprobantes.store');
     });
 });

@@ -13,7 +13,10 @@ import {
   Shield,
   Layers,
   Kanban,
-  Share2
+  Share2,
+  Tag,
+  CheckCircle2,
+  Bell
 } from 'lucide-react';
 
 export default function AppLayout({ children, title, hideFlash = false }) {
@@ -82,6 +85,24 @@ export default function AppLayout({ children, title, hideFlash = false }) {
       href: '/catalogo',
       icon: Layers,
       roles: ['Administrador', 'Coordinador']
+    },
+    {
+      name: 'Descuentos Comerciales',
+      href: '/descuentos',
+      icon: Tag,
+      roles: ['Administrador']
+    },
+    {
+      name: 'Revisión de Pagos',
+      href: '/pagos/revision',
+      icon: CheckCircle2,
+      roles: ['Administrador', 'Vendedor']
+    },
+    {
+      name: 'Recordatorios',
+      href: '/recordatorios',
+      icon: Bell,
+      roles: ['Administrador', 'Coordinador', 'Vendedor']
     }
   ];
 
