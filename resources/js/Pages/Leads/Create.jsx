@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   User,
   Phone,
+  Mail,
   Share2,
   UserCheck,
   Briefcase,

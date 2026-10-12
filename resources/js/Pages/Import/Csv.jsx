@@ -1,22 +1,32 @@
-import React, { useRef } from 'react';
-import { useForm, Head, Link } from '@inertiajs/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import Card from '@/Shared/Card';
 import Button from '@/Shared/Button';
-import { FileSpreadsheet, Upload, AlertTriangle, Inbox } from 'lucide-react';
+import ImportHistory from './ImportHistory';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileSpreadsheet,
+  Info,
+  Upload,
+  X,
+} from 'lucide-react';
 
-export default function CsvImport({ historial = [], origenes = [], resultado = null }) {
+export default function CsvImport({ historial = [], origenes = [] }) {
+  const { flash } = usePage().props;
   const fileInputRef = useRef(null);
-
-  const { setData, post, processing, errors, reset, progress } = useForm({
+  const [uploadMessage, setUploadMessage] = useState(null);
+  const { setData, post, processing, errors, reset, progress, data } = useForm({
     archivo_csv: null,
   });
 
-  const submit = (e) => {
-    e.preventDefault();
+  const submit = (event) => {
+    event.preventDefault();
     post('/leads/import', {
       forceFormData: true,
       onSuccess: () => {
+        setUploadMessage('Archivo subido correctamente.');
         reset('archivo_csv');
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
@@ -25,182 +35,156 @@ export default function CsvImport({ historial = [], origenes = [], resultado = n
     });
   };
 
-  const erroresImport = resultado?.errores || [];
+  useEffect(() => {
+    if (!uploadMessage) {
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => setUploadMessage(null), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [uploadMessage]);
 
   return (
-    <AppLayout>
+    <AppLayout hideFlash>
       <Head title="Importar Prospectos (CSV)" />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-heading)]">
-            Importar Prospectos (CSV)
-          </h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
-            Carga masiva de leads a la bolsa común. Solo Administrador y Coordinador.
-          </p>
-        </div>
-        <Link href="/leads">
-          <Button variant="secondary" type="button">
-            <Inbox size={16} className="mr-2" />
-            Ver prospectos
-          </Button>
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-red-50 text-[var(--brand-primary)] flex items-center justify-center">
-              <Upload size={20} />
-            </div>
-            <div>
-              <h2 className="font-bold text-[var(--text-heading)]">Subir archivo</h2>
-            </div>
+      <div className="space-y-6">
+        {uploadMessage && (
+          <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-sm" role="status">
+            <span>{uploadMessage}</span>
+            <button type="button" onClick={() => setUploadMessage(null)} aria-label="Cerrar mensaje">
+              <X size={16} />
+            </button>
           </div>
-
-          <form onSubmit={submit} className="space-y-4">
+        )}
+        {flash?.error && (
+          <div className="rounded-[var(--radius-md)] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 shadow-sm" role="alert">
+            {flash.error}
+          </div>
+        )}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
             <div>
-              <label className="block text-sm font-medium text-[var(--text-main)] mb-2">
-                Archivo CSV de prospectos
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.txt,text/csv"
-                onChange={(e) => setData('archivo_csv', e.target.files[0] ?? null)}
-                className="block w-full text-sm text-[var(--text-muted)] file:mr-4 file:py-2 file:px-4 file:rounded-[var(--radius-md)] file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[var(--brand-primary)] hover:file:bg-red-100 cursor-pointer"
-              />
-              {errors.archivo_csv && (
-                <p className="text-rose-600 text-sm mt-1">{errors.archivo_csv}</p>
-              )}
-              {progress && (
-                <div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div
-                    className="h-full bg-[var(--brand-primary)] transition-all"
-                    style={{ width: `${progress.percentage}%` }}
-                  />
-                </div>
-              )}
-            </div>
-
-            <Button type="submit" disabled={processing}>
-              <FileSpreadsheet size={16} className="mr-2" />
-              {processing ? 'Procesando...' : 'Subir e importar CSV'}
-            </Button>
-          </form>
-        </Card>
-
-        <Card>
-          <h2 className="font-bold text-[var(--text-heading)] mb-2">Formato esperado</h2>
-          <p className="text-xs text-[var(--text-muted)] mb-3">
-            Primera fila = cabecera (opcional). Columnas en este orden:
-          </p>
-          <code className="block text-xs bg-[var(--bg-body)] border border-[var(--border-color-light)] rounded-[var(--radius-md)] p-3 text-[var(--text-heading)] mb-3">
-            nombre,telefono,correo,id_origen
-          </code>
-          <p className="text-xs text-[var(--text-muted)] mb-2">Ejemplo:</p>
-          <pre className="text-xs bg-[var(--bg-body)] border border-[var(--border-color-light)] rounded-[var(--radius-md)] p-3 overflow-x-auto text-[var(--text-main)]">
-{`nombre,telefono,correo,id_origen
-Ana Perez,70012345,ana@mail.com,1
-Luis Vidal,77123456,,2`}
-          </pre>
-          {origenes.length > 0 && (
-            <div className="mt-4">
-              <p className="text-xs font-semibold text-[var(--text-heading)] mb-1">IDs de origen:</p>
-              <ul className="text-xs text-[var(--text-muted)] space-y-0.5">
-                {origenes.map((o) => (
-                  <li key={o.id_origen}>
-                    <span className="font-semibold text-[var(--text-heading)]">{o.id_origen}</span>
-                    {' — '}
-                    {o.nombre}
-                  </li>
-                ))}
-              </ul>
-              <p className="text-xs text-[var(--text-muted)] mt-2">
-                Si omites <code>id_origen</code>, se usa 1 (primer origen).
+              <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-[var(--text-heading)]">
+                <FileSpreadsheet className="text-[var(--brand-primary)]" size={28} />
+                Importar prospectos
+              </h1>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">
+                Carga leads de forma masiva y consulta el resultado de cada importación.
               </p>
             </div>
-          )}
-        </Card>
-      </div>
-
-      {erroresImport.length > 0 && (
-        <Card>
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle size={18} className="text-amber-600" />
-            <h2 className="font-bold text-[var(--text-heading)]">
-              Detalle de filas fallidas ({erroresImport.length}
-              {resultado?.filas_fallidas > erroresImport.length ? '+' : ''})
-            </h2>
           </div>
-          <ul className="text-sm text-rose-700 space-y-1 max-h-60 overflow-y-auto">
-            {erroresImport.map((err, idx) => (
-              <li key={idx} className="border-b border-rose-100 pb-1">
-                {err}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      <Card>
-        <h2 className="text-lg font-semibold mb-4 text-[var(--text-heading)]">
-          Historial de importaciones
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Archivo</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Exitosas</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fallidas</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {historial.length > 0 ? (
-                historial.map((item) => (
-                  <tr key={item.id_importacion}>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {item.id_importacion}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {item.nombre_archivo}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      {item.usuario?.nombre_completo || '—'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      {item.total_filas}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-emerald-600 font-semibold">
-                      {item.filas_exitosas}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-rose-600 font-semibold">
-                      {item.filas_fallidas}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleString('es-BO')
-                        : '—'}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="px-4 py-6 text-center text-sm text-gray-500">
-                    No hay importaciones registradas todavía.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <Link href="/leads">
+            <Button variant="secondary" className="w-full sm:w-auto">
+              Ver prospectos
+            </Button>
+          </Link>
         </div>
-      </Card>
+
+        <div className="grid w-full max-w-full grid-cols-1 gap-6 xl:grid-cols-5">
+          <Card className="min-w-0 overflow-hidden border-t-4 border-t-[var(--brand-primary)] xl:col-span-3">
+            <div className="mb-6 flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-red-50 text-[var(--brand-primary)]">
+                <Upload size={21} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-[var(--text-heading)]">Subir archivo CSV</h2>
+                <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+                  El archivo se procesará fila por fila y quedará asociado a tu usuario.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={submit} className="space-y-5">
+              <label
+                htmlFor="archivo_csv"
+                className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-[var(--radius-md)] border-2 border-dashed border-[var(--border-color-dark)] bg-[var(--bg-body)] px-5 text-center transition hover:border-[var(--color-primary)] hover:bg-blue-50/30"
+              >
+                <FileSpreadsheet size={30} className="mb-2 text-[var(--color-primary)]" />
+                <span className="text-sm font-semibold text-[var(--text-heading)]">
+                  {data.archivo_csv?.name || 'Selecciona un archivo CSV o TXT'}
+                </span>
+                <span className="mt-1 text-xs text-[var(--text-muted)]">Tamaño máximo: 2 MB</span>
+                <input
+                  id="archivo_csv"
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.txt,text/csv"
+                  onChange={(event) => setData('archivo_csv', event.target.files[0] ?? null)}
+                  className="sr-only"
+                />
+              </label>
+              {errors.archivo_csv && <p className="text-sm text-rose-600">{errors.archivo_csv}</p>}
+
+              {progress && (
+                <div>
+                  <div className="mb-1 flex justify-between text-xs text-[var(--text-muted)]">
+                    <span>Subiendo archivo</span>
+                    <span>{progress.percentage}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                    <div className="h-full bg-[var(--color-primary)] transition-all" style={{ width: `${progress.percentage}%` }} />
+                  </div>
+                </div>
+              )}
+
+              <Button type="submit" disabled={processing || !data.archivo_csv} className="w-full sm:w-auto">
+                <Upload size={16} className="mr-2" />
+                {processing ? 'Procesando...' : 'Importar archivo'}
+              </Button>
+            </form>
+          </Card>
+
+          <Card className="min-w-0 xl:col-span-2">
+            <div className="mb-5 flex items-center gap-2">
+              <Info size={19} className="text-[var(--color-primary)]" />
+              <h2 className="text-lg font-bold text-[var(--text-heading)]">Formato de columnas</h2>
+            </div>
+            <p className="mb-3 text-sm leading-relaxed text-[var(--text-muted)]">
+              Usa una primera fila de cabecera para que cada dato se asigne correctamente.
+            </p>
+            <div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border-color-light)] bg-[var(--bg-body)] p-3">
+              <code className="whitespace-nowrap text-xs text-[var(--text-heading)]">
+                nombre,telefono,id_origen,ci,profesion,ciudad,correo
+              </code>
+            </div>
+            <div className="mt-4 space-y-2 text-xs text-[var(--text-muted)]">
+              <p><strong className="text-[var(--text-heading)]">Obligatorios:</strong> nombre, telefono e id_origen.</p>
+              <p><strong className="text-[var(--text-heading)]">Opcionales:</strong> ci, profesion, ciudad y correo.</p>
+              <p><strong className="text-[var(--text-heading)]">Origen:</strong> acepta ID o nombre; los nuevos se crean automáticamente.</p>
+            </div>
+            {origenes.length > 0 && (
+              <div className="mt-5 border-t border-[var(--border-color-light)] pt-4">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--text-heading)]">Orígenes disponibles</p>
+                <div className="flex flex-wrap gap-2">
+                  {origenes.map((origen) => (
+                    <span key={origen.id_origen} className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-[var(--color-primary)]">
+                      {origen.id_origen} · {origen.nombre}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <div className="flex items-center gap-2 border-b border-[var(--border-color-light)] pb-3">
+          <CheckCircle2 size={20} className="text-[var(--color-success)]" />
+          <div>
+            <h2 className="text-lg font-bold text-[var(--text-heading)]">Historial y resultados</h2>
+            <p className="text-sm text-[var(--text-muted)]">Consulta las filas procesadas y los errores de cada archivo.</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-[var(--text-muted)]">Mostrando las últimas {historial.length} importaciones.</p>
+          <Link href="/leads/import/history">
+            <Button variant="secondary" className="w-full sm:w-auto">
+              Ver historial completo
+            </Button>
+          </Link>
+        </div>
+        <ImportHistory historial={historial} showSummary={false} />
+      </div>
     </AppLayout>
   );
 }

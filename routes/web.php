@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
     // Importación CSV (Admin/Coordinador) — antes de /leads/{id}
     Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
         Route::get('/leads/import', [CsvImportController::class, 'index'])->name('importar.csv');
+        Route::get('/leads/import/history', [CsvImportController::class, 'history'])->name('importar.csv.history');
         Route::post('/leads/import', [CsvImportController::class, 'store'])->name('importar.csv.store');
     });
 

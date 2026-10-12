@@ -18,9 +18,10 @@ class CsvImportController extends Controller
     public function index(): Response
     {
         $historial = ImportacionCsv::with('usuario')
+            ->with('errores')
             ->orderByDesc('created_at')
             ->orderByDesc('id_importacion')
-            ->limit(50)
+            ->limit(5)
             ->get();
 
         $origenes = OrigenLead::orderBy('id_origen')->get(['id_origen', 'nombre']);
@@ -29,6 +30,18 @@ class CsvImportController extends Controller
             'historial' => $historial,
             'origenes' => $origenes,
             'resultado' => session('import_resultado'),
+        ]);
+    }
+
+    public function history(): Response
+    {
+        $historial = ImportacionCsv::with(['usuario', 'errores'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id_importacion')
+            ->get();
+
+        return Inertia::render('Import/History', [
+            'historial' => $historial,
         ]);
     }
 

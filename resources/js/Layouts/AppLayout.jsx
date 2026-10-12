@@ -16,7 +16,7 @@ import {
   Share2
 } from 'lucide-react';
 
-export default function AppLayout({ children, title }) {
+export default function AppLayout({ children, title, hideFlash = false }) {
   const { auth, flash } = usePage().props;
   const user = auth?.user;
   const roleName = user?.rol?.nombre || 'Usuario';
@@ -226,12 +226,12 @@ export default function AppLayout({ children, title }) {
         <main className="flex-1 md:ml-[315px] p-6 lg:p-8 min-h-[calc(100vh-80px)] overflow-y-auto">
           <div className="max-w-6xl mx-auto space-y-6">
             {/* Mensajes Flash */}
-            {flash?.success && (
+            {!hideFlash && flash?.success && (
               <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-[var(--radius-lg)] shadow-sm flex items-center justify-between">
                 <span>{flash.success}</span>
               </div>
             )}
-            {flash?.error && (
+            {!hideFlash && flash?.error && (
               <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-[var(--radius-lg)] shadow-sm flex items-center justify-between">
                 <span>{flash.error}</span>
               </div>
