@@ -15,7 +15,8 @@ use Inertia\Response;
 class PipelineController extends Controller
 {
     public function __construct(
-        protected PipelineService $pipelineService
+        protected PipelineService $pipelineService,
+        protected \App\Services\CatalogService $catalogService
     ) {}
 
     /**
@@ -43,6 +44,7 @@ class PipelineController extends Controller
             'motivosPerdida' => $motivosPerdida,
             'vendedores' => $vendedores,
             'filters' => $filtros,
+            'catalogo' => $this->catalogService->getCatalogCompleto(),
         ]);
     }
 

@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import Button from '@/Shared/Button';
 import Badge from '@/Shared/Badge';
+import PaymentUploadModal from '@/Shared/PaymentUploadModal';
 import {
   Kanban as KanbanIcon,
   Search,
@@ -18,7 +19,8 @@ import {
   X,
   ExternalLink,
   Clock,
-  Sparkles
+  Sparkles,
+  UploadCloud
 } from 'lucide-react';
 
 export default function PipelineKanban({
@@ -27,10 +29,12 @@ export default function PipelineKanban({
   motivosPerdida = [],
   vendedores = [],
   filters = {},
+  catalogo = { programas: [], modulos_sueltos: [] },
 }) {
   const { auth } = usePage().props;
   const user = auth?.user;
   const isVendedor = user?.rol?.nombre === 'Vendedor';
+  const canHandlePayments = user?.rol?.nombre === 'Administrador' || user?.rol?.nombre === 'Vendedor';
 
   // Estado local para permitir actualización optimista y drag & drop
   const [boardColumns, setBoardColumns] = useState(columnas);
@@ -56,6 +60,10 @@ export default function PipelineKanban({
     ciudad: '',
   });
   const [conversionError, setConversionError] = useState('');
+
+  // Modal para comprobante de pago digital
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentModalLead, setPaymentModalLead] = useState(null);
 
   // Sincronizar estado cuando las props cambian
   useEffect(() => {
@@ -141,7 +149,17 @@ export default function PipelineKanban({
       }
     }
 
-    // 3. Transición ordinaria directa
+    // 3. Regla Promesa de Pago (etapa 4): realizar transición y abrir modal de carga de comprobante si tiene permisos
+    if (targetStageId === 4) {
+      executeStageChange(lead, targetStageId, {});
+      if (canHandlePayments && (!isVendedor || lead.id_vendedor === user?.id_usuario)) {
+        setPaymentModalLead({ ...lead, id_etapa: 4 });
+        setPaymentModalOpen(true);
+      }
+      return;
+    }
+
+    // 4. Transición ordinaria directa
     executeStageChange(lead, targetStageId, {});
   };
 
@@ -331,6 +349,15 @@ export default function PipelineKanban({
                       <span className="text-xs font-bold text-[var(--text-heading)] truncate">
                         {columna.nombre}
                       </span>
+                      {columna.id_etapa === 4 && canHandlePayments && (
+                        <Link
+                          href="/pagos/revision"
+                          className="text-[var(--brand-primary)] hover:text-blue-700 transition ml-0.5"
+                          title="Ir a Cola de Revisión de Pagos"
+                        >
+                          <ExternalLink size={12} />
+                        </Link>
+                      )}
                     </div>
                     <span
                       className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${style.bg}`}
@@ -657,6 +684,22 @@ export default function PipelineKanban({
               </form>
             </div>
           </div>
+        )}
+
+        {/* MODAL RF4.1: Subir Comprobante de Pago Enriquecido */}
+        {paymentModalLead && (
+          <PaymentUploadModal
+            isOpen={paymentModalOpen}
+            onClose={() => {
+              setPaymentModalOpen(false);
+              setPaymentModalLead(null);
+            }}
+            lead={paymentModalLead}
+            catalogo={catalogo}
+            onSuccess={() => {
+              router.reload({ only: ['columnas'] });
+            }}
+          />
         )}
       </div>
     </AppLayout>
