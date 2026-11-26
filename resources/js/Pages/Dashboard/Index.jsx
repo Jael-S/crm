@@ -8,7 +8,8 @@ import {
   Layers,
   ArrowRight,
   Shield,
-  GraduationCap
+  GraduationCap,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function DashboardIndex({ stats, userRol }) {
@@ -19,21 +20,16 @@ export default function DashboardIndex({ stats, userRol }) {
     <AppLayout>
       <Head title="Dashboard" />
 
-      {/* Banner de Bienvenida */}
-      <div className="bg-gradient-to-r from-[var(--brand-primary)] to-[#203366] text-white p-6 sm:p-8 rounded-[var(--radius-lg)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-2xl font-bold tracking-tight">
-            Hola, {user?.nombre_completo}
+      {/* Cabecera Uniforme */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+        <div className="flex items-center gap-2.5">
+          <LayoutDashboard className="text-blue-600" size={24} />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Embudo General · Hola, {user?.nombre_completo}
           </h1>
-          <p className="text-sm text-white/800 mt-1 max-w-xl">
-            Panel de control general del CRM EDUCATIVO. </p>
-          <p className="text-sm text-white/800 mt-1 max-w-xl"> 
-            Desde aquí puedes gestionar prospectos, usuarios y consultar las etapas comerciales.
-          </p>
         </div>
-
-        <div className="hidden lg:flex items-center justify-center w-20 h-20 bg-white/10 rounded-full border border-white/20">
-          <GraduationCap size={44} className="text-white/90" />
+        <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 self-start sm:self-auto">
+          <span>Rol: {userRol}</span>
         </div>
       </div>
 

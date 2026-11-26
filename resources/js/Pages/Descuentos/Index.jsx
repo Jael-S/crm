@@ -76,15 +76,16 @@ export default function DescuentosIndex({ descuentos = [] }) {
       <Head title="Descuentos Comerciales" />
 
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-heading)] flex items-center gap-2">
-              <Tag size={24} className="text-[var(--brand-primary)]" />
-              <span>Descuentos Comerciales</span>
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <Tag size={24} className="text-blue-600" />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Descuentos Comerciales
             </h1>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              Catálogo de promociones institucionales aplicables a los prospectos (máximo 1 por lead).
-            </p>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+              {descuentos.length} promociones
+            </span>
           </div>
 
           <Button onClick={openCreateModal} className="flex items-center gap-1.5 text-xs py-2">

@@ -38,6 +38,11 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'visitas_total' => fn () => (int) (
+                \App\Models\Visita::where('pagina', 'global')->value('contador')
+                ?: (\App\Models\Visita::where('pagina', '!=', 'global')->max('contador') ?: 1)
+            ),
+            'visitas_pagina' => fn () => (int) (\App\Models\Visita::where('pagina', $request->path() === '/' ? 'inicio' : substr($request->path(), 0, 120))->value('contador') ?? 1),
         ];
     }
 }

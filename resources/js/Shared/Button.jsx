@@ -16,7 +16,7 @@ export default function Button({
     secondary: "bg-transparent border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white",
     danger: "bg-[var(--color-danger)] text-white hover:bg-red-700 shadow-sm",
     success: "bg-[var(--color-success)] text-white hover:bg-green-700 shadow-sm",
-    ghost: "bg-transparent text-[var(--text-main)] hover:bg-gray-100",
+    ghost: "bg-transparent text-[var(--text-main)] hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-200",
   };
 
   return (

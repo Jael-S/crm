@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import Card from '@/Shared/Card';
 import Button from '@/Shared/Button';
 import {
+  Users,
   UserPlus,
   Search,
   Shield,
@@ -121,13 +122,19 @@ export default function UsersIndex({ usuarios, roles, filters }) {
     <AppLayout>
       <Head title="Gestión de Usuarios" />
 
-      {/* Cabecera de Página */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-heading)]">Gestión de Usuarios</h1>
+      {/* Cabecera Uniforme */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+        <div className="flex items-center gap-2.5">
+          <Users className="text-blue-600" size={24} />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Gestión de Usuarios
+          </h1>
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+            {usuarios.total || usuarios.data?.length || 0} usuarios
+          </span>
         </div>
-        <Button onClick={openCreateModal} className="flex items-center gap-2">
-          <UserPlus size={18} />
+        <Button onClick={openCreateModal} className="flex items-center gap-2 text-xs py-2 self-start sm:self-auto cursor-pointer">
+          <UserPlus size={16} />
           <span>Nuevo Usuario</span>
         </Button>
       </div>
@@ -257,7 +264,7 @@ export default function UsersIndex({ usuarios, roles, filters }) {
                       <button
                         type="button"
                         onClick={() => openEditModal(u)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[var(--brand-primary)] hover:bg-blue-50 rounded border border-blue-100 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-sky-400 bg-blue-50/50 hover:bg-blue-100/60 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 rounded border border-blue-200 dark:border-sky-800/60 transition cursor-pointer"
                       >
                         <Edit2 size={13} />
                         <span>Editar</span>

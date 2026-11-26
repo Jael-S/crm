@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
         // 3. Leads y Asignaciones Demo (Nicol - Dev B)
         $this->call([
             LeadSeeder::class,
+            VisitaSeeder::class,
         ]);
     }
 }

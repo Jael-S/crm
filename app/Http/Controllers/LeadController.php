@@ -122,6 +122,7 @@ class LeadController extends Controller
                 'enviosMatricula.interes',
             ]),
             'vendedores' => $vendedores,
+            'descuentos' => Descuento::activos()->orderBy('nombre')->get(),
             'catalogo' => $this->catalogService->getCatalogCompleto(),
             'ex_alumno_info' => $exAlumnoInfo,
         ]);
@@ -240,5 +241,47 @@ class LeadController extends Controller
             'origenes' => $origenes,
             'vendedores' => $vendedores,
         ]);
+    }
+
+    /**
+     * Búsqueda global predictiva en el Header (Requisito Evans).
+     */
+    public function globalSearch(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json(['results' => []]);
+        }
+
+        $user = $request->user();
+        $query = Lead::query();
+
+        if ($user->isVendedor()) {
+            $query->where(function ($sub) use ($user) {
+                $sub->where('id_vendedor', $user->id_usuario)
+                    ->orWhereNull('id_vendedor');
+            });
+        }
+
+        $results = $query->where(function ($sub) use ($q) {
+            $sub->where('nombre', 'ilike', "%{$q}%")
+                ->orWhere('correo', 'ilike', "%{$q}%")
+                ->orWhere('ci', 'ilike', "%{$q}%")
+                ->orWhere('telefono', 'ilike', "%{$q}%");
+        })
+        ->with(['etapa', 'vendedor'])
+        ->limit(6)
+        ->get(['id_lead', 'nombre', 'correo', 'ci', 'telefono', 'id_etapa', 'id_vendedor'])
+        ->map(fn ($lead) => [
+            'id' => $lead->id_lead,
+            'nombre' => $lead->nombre,
+            'ci' => $lead->ci,
+            'correo' => $lead->correo,
+            'telefono' => $lead->telefono,
+            'etapa' => $lead->etapa?->nombre ?? 'Sin etapa',
+            'url' => "/leads/{$lead->id_lead}",
+        ]);
+
+        return response()->json(['results' => $results]);
     }
 }

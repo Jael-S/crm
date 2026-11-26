@@ -60,16 +60,16 @@ export default function OrigenesIndex({ origenes = [] }) {
       <Head title="Canales de Origen - CRM Educativo" />
 
       <div className="space-y-6">
-        {/* Cabecera */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[var(--border-color-light)]">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-heading)] flex items-center gap-2">
-              <Share2 className="text-[var(--brand-primary)]" size={26} />
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <Share2 className="text-blue-600" size={24} />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
               Canales de Origen
             </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              Administra los medios de prospección desde donde llegan los interesados a la facultad.
-            </p>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+              {origenes.length} canales
+            </span>
           </div>
 
           <Button

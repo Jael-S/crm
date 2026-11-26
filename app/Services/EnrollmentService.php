@@ -72,7 +72,7 @@ class EnrollmentService
         try {
             Log::info("[MATRICULA-PROYECTO-2] Enviando matrícula para lead #{$lead->id_lead} ({$lead->nombre}) a {$urlEndpoint}: " . json_encode($payload));
 
-            $response = Http::timeout(15)
+            $response = Http::timeout(35)
                 ->withHeaders([
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
@@ -169,7 +169,7 @@ class EnrollmentService
         }
 
         try {
-            $response = Http::timeout(15)
+            $response = Http::timeout(35)
                 ->withHeaders([
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',

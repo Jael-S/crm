@@ -1,52 +1,344 @@
 @import "tailwindcss";
 
 :root {
-  /* --- Colores de Marca --- */
-  --brand-primary: #3d5598;    /* Azul corporativo oscuro */
-  --brand-secondary: #da3038;  /* Rojo corporativo (usado en el Navbar principal) */
+  /* --- Paleta Oficial UNEXO (Evans) --- */
+  --unexo-navy: #0a2540;          /* Azul Noche Corporativo */
+  --unexo-teal: #00b4d8;          /* Teal / Cian Tecnológico */
+  --unexo-coral: #e63946;         /* Acento Coral */
+  --unexo-blue: #0284c7;          /* Azul de acción y enlaces */
+  --unexo-blue-hover: #0369a1;    /* Hover de botones */
 
-  /* --- Colores Principales de Interfaz --- */
-  --color-primary: #0051f9;    /* Azul brillante (Botones principales, enlaces, hover states) */
-  --color-primary-hover: #0041c7; /* Azul más oscuro para el hover */
-  --color-secondary: #6a737b;  /* Gris secundario (iconos inactivos, texto secundario) */
+  /* --- Mapeo de Variables Globales --- */
+  --brand-primary: var(--unexo-navy);
+  --brand-secondary: var(--unexo-teal);
+  --brand-accent: var(--unexo-coral);
 
-  /* --- Fondos (Backgrounds) --- */
-  --bg-body: #f5f9fd;          /* Color de fondo principal de la página */
-  --bg-surface: #ffffff;       /* Fondo de tarjetas, modales y contenedores */
-  --bg-sidebar: #f8f9fa;       /* Fondo del menú lateral */
-  --bg-highlight: #ebf0f9;     /* Fondo para elementos destacados suaves */
+  --color-primary: var(--unexo-blue);
+  --color-primary-hover: var(--unexo-blue-hover);
+  --color-secondary: #64748b;
 
-  /* --- Texto --- */
-  --text-main: #4c5a73;        /* Color principal de párrafos y textos generales */
-  --text-heading: #313848;     /* Color oscuro para títulos (h1, h2, h3) */
-  --text-muted: #6a737b;       /* Textos secundarios, fechas */
-  --text-light: #ffffff;       /* Texto sobre fondos oscuros o botones primarios */
+  /* --- Fondos Limpios (Inspirados en Grupo 6) --- */
+  --bg-body: #f8fafc;             /* Fondo gris pizarra ultra suave */
+  --bg-surface: #ffffff;          /* Tarjetas y modales blanco puro */
+  --bg-sidebar: #071828;          /* Sidebar Azul Noche Profundo */
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --bg-sidebar-active: #0284c7;
+  --bg-highlight: #f0f9ff;
 
-  /* --- Estados (Feedback) --- */
-  --color-success: #28a745;
-  --color-warning: #ffc107;
-  --color-danger: #dc3545;
-  --color-info: #17a2b8;
+  /* --- Texto de Alta Legibilidad --- */
+  --text-main: #334155;           /* Gris oscuro slate 700 para texto fluido */
+  --text-heading: #0f172a;        /* Títulos negros slate 900 */
+  --text-muted: #64748b;          /* Secundario slate 500 */
+  --text-light: #ffffff;
 
-  /* --- Bordes y Sombras --- */
-  --border-color-light: #ebf0f9;  /* Bordes de tarjetas y divisiones sutiles */
-  --border-color-dark: #d5ddea;   /* Bordes de inputs y tablas */
+  /* --- Estados Limpios --- */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #0284c7;
 
-  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  --shadow-card-hover: 0 13px 37px rgba(92, 107, 121, 0.1);
+  /* --- Bordes y Sombras Modernas --- */
+  --border-color-light: #e2e8f0;
+  --border-color-dark: #cbd5e1;
 
-  /* --- Radios (Border-radius) --- */
-  --radius-sm: 4px;      /* Inputs, botones pequeños */
-  --radius-md: 5px;      /* Botones estándar */
-  --radius-lg: 8px;      /* Tarjetas, contenedores principales */
-  --radius-xl: 10px;     /* Modales */
-  --radius-circle: 50%;  /* Avatares, botones circulares */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
+  /* --- Radio por defecto (Tema Adultos: Rectangular formal) --- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 9999px;
+
+  --font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --base-font-size: 15px;
 }
 
+/* =========================================================
+   TEMA 1: ADULTOS (Formal, sobrio, académico, serif Lora)
+   Azul oscuro profundo corporativo medianoche #061525
+   ========================================================= */
+body.theme-adultos {
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --font-family-base: 'Lora', 'Georgia', 'Cambria', serif;
+  --bg-body: #f8fafc;
+  --brand-primary: #0a2540;
+  --bg-sidebar-header: #061525;
+  --border-sidebar-header: #0f233a;
+}
+
+body.theme-adultos,
+body.theme-adultos h1,
+body.theme-adultos h2,
+body.theme-adultos h3,
+body.theme-adultos h4,
+body.theme-adultos h5,
+body.theme-adultos h6,
+body.theme-adultos p,
+body.theme-adultos span,
+body.theme-adultos a,
+body.theme-adultos button,
+body.theme-adultos input,
+body.theme-adultos select,
+body.theme-adultos textarea {
+  font-family: 'Lora', 'Georgia', 'Cambria', serif !important;
+}
+
+/* =========================================================
+   TEMA 2: JÓVENES (Moderno Tech, sans-serif Plus Jakarta Sans)
+   Azul oscuro elegante y tecnológico #081f38
+   ========================================================= */
+body.theme-jovenes {
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --font-family-base: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --bg-body: #f1f5f9;
+  --brand-primary: #0f172a;
+  --color-primary: #0284c7;
+  --bg-sidebar-header: #081f38;
+  --border-sidebar-header: #113054;
+}
+
+body.theme-jovenes,
+body.theme-jovenes h1,
+body.theme-jovenes h2,
+body.theme-jovenes h3,
+body.theme-jovenes h4,
+body.theme-jovenes h5,
+body.theme-jovenes h6,
+body.theme-jovenes p,
+body.theme-jovenes span,
+body.theme-jovenes a,
+body.theme-jovenes button,
+body.theme-jovenes input,
+body.theme-jovenes select,
+body.theme-jovenes textarea {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+
+/* =========================================================
+   TEMA 3: NIÑOS (Lúdico, redondeado, Quicksand / Nunito)
+   Azul notablemente más claro y vivo #1964a3
+   ========================================================= */
+body.theme-ninos {
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 30px;
+  --font-family-base: 'Quicksand', 'Nunito', 'Comic Sans MS', cursive, sans-serif;
+  --bg-body: #fffdf5;             /* Amarillo crema muy suave */
+  --bg-surface: #ffffff;
+  --brand-primary: #1e3a8a;
+  --color-primary: #f59e0b;
+  --color-primary-hover: #d97706;
+  --bg-sidebar-header: #1964a3;
+  --border-sidebar-header: #2176bd;
+}
+
+body.theme-ninos,
+body.theme-ninos h1,
+body.theme-ninos h2,
+body.theme-ninos h3,
+body.theme-ninos h4,
+body.theme-ninos h5,
+body.theme-ninos h6,
+body.theme-ninos p,
+body.theme-ninos span,
+body.theme-ninos a,
+body.theme-ninos button,
+body.theme-ninos input,
+body.theme-ninos select,
+body.theme-ninos textarea {
+  font-family: 'Quicksand', 'Nunito', cursive, sans-serif !important;
+}
+
+/* =========================================================
+   ACCESIBILIDAD: ESCALADO TIPOGRÁFICO
+   ========================================================= */
+html.font-scale-sm { font-size: 13.5px; }
+html.font-scale-md { font-size: 15px; }
+html.font-scale-lg { font-size: 17px; }
+html.font-scale-xl { font-size: 19px; }
+
+/* =========================================================
+   MODO OSCURO / CLARO (Fondo oscuro, texto blanco nítido)
+   ========================================================= */
+body.theme-dark {
+  --bg-body: #0a0f1d !important;
+  --bg-surface: #111a2e !important;
+  --bg-highlight: #162238 !important;   /* Table headers y fondos destacados oscuros */
+  --text-main: #e2e8f0 !important;
+  --text-heading: #ffffff !important;
+  --text-muted: #94a3b8 !important;
+  --border-color-light: #1e293b !important;
+  --border-color-dark: #334155 !important;
+  --brand-primary: #38bdf8 !important;  /* En modo oscuro, cyan brillante de alta legibilidad */
+  --color-secondary: #94a3b8 !important;
+  background-color: #0a0f1d !important;
+  color: #e2e8f0 !important;
+}
+
+body.theme-dark main {
+  background-color: #0a0f1d !important;
+  color: #e2e8f0 !important;
+}
+
+body.theme-dark .bg-white {
+  background-color: #111a2e !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+body.theme-dark .bg-slate-50,
+body.theme-dark .bg-slate-100,
+body.theme-dark .bg-slate-100\/90,
+body.theme-dark .bg-slate-100\/80,
+body.theme-dark .bg-slate-50\/70,
+body.theme-dark .bg-gray-50,
+body.theme-dark .bg-gray-100 {
+  background-color: #162238 !important;
+  border-color: #1e293b !important;
+}
+
+/* ENCABEZADOS Y TÍTULOS DE TABLAS EN MODO OSCURO (Corrige encabezados blancos) */
+body.theme-dark thead,
+body.theme-dark thead tr,
+body.theme-dark thead th,
+body.theme-dark th {
+  background-color: #162238 !important;
+  color: #cbd5e1 !important;
+  border-color: #1e293b !important;
+}
+
+body.theme-dark thead button {
+  color: #38bdf8 !important;
+}
+
+/* HOVER ELEGANTE Y VISIBLE EN MODO OSCURO */
+body.theme-dark table tbody tr:hover,
+body.theme-dark tbody tr:hover,
+body.theme-dark tr:hover,
+body.theme-dark tr.hover\:bg-gray-50\/70:hover,
+body.theme-dark tr.hover\:bg-gray-50\/60:hover,
+body.theme-dark tr.hover\:bg-gray-50:hover,
+body.theme-dark tr.hover\:bg-slate-50\/80:hover,
+body.theme-dark tr.hover\:bg-slate-50\/60:hover,
+body.theme-dark tr.hover\:bg-slate-50:hover,
+body.theme-dark tr.hover\:bg-slate-100:hover,
+body.theme-dark tr.hover\:bg-gray-100:hover,
+body.theme-dark tr.hover\:bg-blue-50\/50:hover,
+body.theme-dark tr.hover\:bg-blue-50\/60:hover,
+body.theme-dark tr.hover\:bg-blue-50:hover {
+  background-color: #18253d !important;
+}
+
+/* FILAS Y ELEMENTOS SELECCIONADOS */
+body.theme-dark tr.bg-blue-50\/60,
+body.theme-dark tr.bg-blue-50,
+body.theme-dark .bg-blue-50\/60 {
+  background-color: #162c4e !important;
+}
+
+/* BOTONES DE EDICIÓN Y ACCIÓN EN TABLAS */
+body.theme-dark .border-blue-100,
+body.theme-dark .border-blue-200 {
+  border-color: #1e3a5f !important;
+}
+
+body.theme-dark .bg-blue-50,
+body.theme-dark .bg-blue-50\/50 {
+  background-color: #162b4c !important;
+}
+
+body.theme-dark .hover\:bg-blue-50:hover,
+body.theme-dark .hover\:bg-blue-100:hover,
+body.theme-dark .hover\:bg-blue-50\/50:hover {
+  background-color: #1d3963 !important;
+}
+
+body.theme-dark .text-blue-600,
+body.theme-dark .text-blue-700,
+body.theme-dark .text-blue-800 {
+  color: #38bdf8 !important;
+}
+
+body.theme-dark .hover\:bg-gray-100:hover,
+body.theme-dark .hover\:bg-slate-100:hover {
+  background-color: #1e293b !important;
+}
+
+body.theme-dark .text-slate-900,
+body.theme-dark .text-slate-800,
+body.theme-dark .text-slate-700,
+body.theme-dark .text-gray-900,
+body.theme-dark .text-gray-800 {
+  color: #ffffff !important;
+}
+
+body.theme-dark .text-slate-600,
+body.theme-dark .text-slate-500,
+body.theme-dark .text-gray-600,
+body.theme-dark .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+body.theme-dark .border-slate-200,
+body.theme-dark .border-slate-100,
+body.theme-dark .border-gray-200,
+body.theme-dark .border-gray-100 {
+  border-color: #1e293b !important;
+}
+
+body.theme-dark input,
+body.theme-dark select,
+body.theme-dark textarea {
+  background-color: #162238 !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+body.theme-dark input::placeholder,
+body.theme-dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+body.theme-dark footer {
+  background-color: #071828 !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+/* =========================================================
+   ESTILOS BASE
+   ========================================================= */
 body {
   background-color: var(--bg-body);
   color: var(--text-main);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-family-base);
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar sutil y moderno */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
