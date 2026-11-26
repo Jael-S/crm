@@ -25,14 +25,17 @@ export default function RecordatoriosIndex({ recordatorios = [] }) {
       <Head title="Mis Recordatorios" />
 
       <div className="max-w-6xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-heading)] flex items-center gap-2">
-            <Bell size={24} className="text-[var(--brand-primary)]" />
-            <span>Recordatorios y Alertas Comerciales</span>
-          </h1>
-          <p className="text-xs text-[var(--text-muted)] mt-1">
-            Tareas programadas de contacto, llamadas y seguimiento a prospectos.
-          </p>
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <Bell size={24} className="text-blue-600" />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Mis Recordatorios
+            </h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+              {recordatorios.length} tareas
+            </span>
+          </div>
         </div>
 
         <Card>

@@ -30,14 +30,23 @@ export default function Login() {
       <Head title="CRM EDUCATIVO" />
 
       {/* Tarjeta de Login */}
-      <div className="w-full max-w-md bg-white rounded-[var(--radius-lg)] shadow-md border border-[var(--border-color-light)] overflow-hidden">
-        {/* Cabecera Corporativa con Rojo Institucional */}
-        <div className="bg-[var(--brand-secondary)] p-6 text-white text-center">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        {/* Cabecera Corporativa UNEXO con Azul Noche y Acento Cyan */}
+        <div className="bg-gradient-to-r from-[#071828] to-[#0a2540] p-7 text-white text-center relative overflow-hidden">
           <div className="flex justify-center mb-3">
-            <img src="/FICCT.png" alt="Logo FICCT" className="h-20 w-auto object-contain drop-shadow" />
+            <img
+              src="/images/unexo1.jpeg"
+              alt="Logo UNEXO"
+              className="h-16 w-auto rounded-xl object-contain bg-white/10 p-1.5 shadow-md border border-white/20"
+              onError={(e) => {
+                e.currentTarget.src = '/images/unexo2.jpeg';
+              }}
+            />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">CRM EDUCATIVO</h1>
-          <p className="text-sm text-white/80 mt-1">Control de prospectos y trazabilidad académica</p>
+          <h1 className="text-2xl font-extrabold tracking-tight">UNEXO CRM</h1>
+          <p className="text-xs text-cyan-300 font-medium mt-1 tracking-wide">
+            Plataforma de Admisiones y Trazabilidad Académica
+          </p>
         </div>
 
         {/* Formulario */}

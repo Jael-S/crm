@@ -36,6 +36,9 @@ Route::middleware('auth')->group(function () {
     // Dashboard (todos los roles autenticados)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Búsqueda Global Predictiva en Header (Requisito Evans)
+    Route::get('/busqueda-global', [LeadController::class, 'globalSearch'])->name('busqueda.global');
+
     // Módulo 1: Gestión de Usuarios (Exclusivo Administrador)
     Route::middleware('checkRole:Administrador')->group(function () {
         Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');

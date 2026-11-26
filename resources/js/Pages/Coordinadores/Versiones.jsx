@@ -41,11 +41,13 @@ export default function CoordinatorVersions({ coordinador, coordinadores = [], v
     <AppLayout>
       <Head title={`Versiones de ${coordinador.nombre_completo}`} />
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Link href="/usuarios" className="p-2 bg-white border rounded"><ArrowLeft size={18} /></Link>
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-heading)]">Versiones / Cohortes Asignadas</h1>
-            <p className="text-sm text-[var(--text-muted)]">{coordinador.nombre_completo}</p>
+        {/* Cabecera Uniforme */}
+        <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
+          <Link href="/usuarios" className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition"><ArrowLeft size={18} /></Link>
+          <div className="flex items-center gap-2.5">
+            <GraduationCap className="text-blue-600" size={24} />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Métricas y Versiones Asignadas</h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">{coordinador.nombre_completo}</span>
           </div>
         </div>
 

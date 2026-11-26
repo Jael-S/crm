@@ -126,16 +126,16 @@ export default function LeadsPool({ leads, filters, origenes = [], vendedores = 
       <Head title="Bolsa Común de Prospectos" />
 
       <div className="space-y-6">
-        {/* Cabecera */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-heading)] flex items-center gap-2">
-              <Inbox className="text-[var(--brand-primary)]" size={28} />
-              <span>Bolsa Común de Prospectos</span>
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <Inbox className="text-blue-600" size={24} />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Bolsa Común (Etapa 1)
             </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              Prospectos libres sin asesor comercial asignado. Distribución por Round-Robin o asignación directa.
-            </p>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+              {leads.total || leads.data?.length || 0} sin asignar
+            </span>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -289,7 +289,7 @@ export default function LeadsPool({ leads, filters, origenes = [], vendedores = 
 
                         {/* Origen */}
                         <td className="px-6 py-4">
-                          <span className="inline-block px-2.5 py-1 text-xs font-medium bg-[#ebf0f9] text-[var(--brand-primary)] rounded-[var(--radius-sm)]">
+                          <span className="inline-block px-2.5 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-[var(--radius-sm)] border border-slate-200 dark:border-slate-700">
                             {lead.origen?.nombre || 'Desconocido'}
                           </span>
                         </td>
@@ -307,7 +307,7 @@ export default function LeadsPool({ leads, filters, origenes = [], vendedores = 
                           <div className="inline-flex items-center gap-2 justify-end">
                             <Link
                               href={`/leads/${lead.id_lead}`}
-                              className="p-1.5 text-[var(--color-secondary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-highlight)] rounded transition"
+                              className="p-1.5 text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"
                               title="Ver Ficha"
                             >
                               <Eye size={17} />

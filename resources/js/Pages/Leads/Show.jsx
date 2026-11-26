@@ -35,7 +35,13 @@ import {
   Layers
 } from 'lucide-react';
 
-export default function LeadsShow({ lead, vendedores = [], catalogo = { programas: [], modulos_sueltos: [] }, ex_alumno_info = null }) {
+export default function LeadsShow({
+  lead,
+  vendedores = [],
+  catalogo = { programas: [], modulos_sueltos: [] },
+  ex_alumno_info = null,
+  descuentos = []
+}) {
   const { auth } = usePage().props;
   const user = auth?.user;
   const canAssign = user?.rol?.nombre === 'Administrador' || user?.rol?.nombre === 'Coordinador';
@@ -50,6 +56,7 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
     id_version_externo: '',
     id_modulo_externo: '',
     nombre_snapshot: '',
+    id_descuento: '',
   });
 
   // Formulario Asignación Manual
@@ -154,6 +161,7 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
         interestForm.reset();
         interestForm.setData('id_lead', lead.id_lead);
         interestForm.setData('tipo', 'PROGRAMA');
+        interestForm.setData('id_descuento', '');
         setInterestType('PROGRAMA');
       },
     });
@@ -423,98 +431,112 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
               </div>
             </Card>
 
-            {/* Tarjeta de Programas y Módulos de Interés (Jael - RF2.2) */}
-            <Card>
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-color-light)]">
-                <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider flex items-center gap-2">
-                  <MessageSquare size={16} className="text-[var(--brand-primary)]" />
+            {/* Tarjeta de Programas y Módulos de Interés */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  <GraduationCap size={18} className="text-blue-600" />
                   <span>Programas y Módulos de Interés</span>
                 </h2>
-                <Button onClick={() => setInterestModalOpen(true)} className="text-xs py-1.5">
-                  <Plus size={14} className="mr-1" /> Agregar Interés
+                <Button
+                  onClick={() => setInterestModalOpen(true)}
+                  className="text-xs py-2 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold inline-flex items-center gap-1.5"
+                >
+                  <Plus size={14} />
+                  <span>Vincular Curso</span>
                 </Button>
               </div>
 
               {lead.intereses && lead.intereses.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {lead.intereses.map((interes) => (
                     <div
                       key={interes.id_interes}
-                      className="flex items-center justify-between gap-3 p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)] border border-[var(--border-color-light)]"
+                      className="p-4 bg-slate-50/70 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-slate-50 transition"
                     >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                      <div className="space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
                             {interes.tipo}
                           </span>
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                            className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
                               interes.estado === 'MATRICULADO'
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : interes.estado === 'EN_PAGO'
                                 ? 'bg-amber-100 text-amber-800'
-                                : 'bg-slate-100 text-slate-700'
+                                : 'bg-slate-200 text-slate-700'
                             }`}
                           >
                             {interes.estado || 'EN_SEGUIMIENTO'}
                           </span>
-                          {interes.monto_pactado && (
-                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                              Bs. {interes.monto_pactado}
+                          {interes.descuento && (
+                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              {interes.descuento.nombre} ({interes.descuento.porcentaje}%)
                             </span>
                           )}
                         </div>
-                        <p className="text-sm font-semibold text-[var(--text-heading)]">
+
+                        <p className="text-base font-bold text-slate-900">
                           {interes.nombre_snapshot}
                         </p>
+
+                        {interes.monto_pactado && (
+                          <p className="text-xs font-bold text-blue-700">
+                            Arancel Oficial: Bs. {Number(interes.monto_pactado).toFixed(2)}
+                          </p>
+                        )}
                       </div>
-                      {interes.estado !== 'MATRICULADO' ? (
-                        <button
-                          type="button"
-                          onClick={() => removeInterest(interes.id_interes)}
-                          className="text-rose-600 hover:text-rose-800 p-1 rounded hover:bg-rose-50 transition cursor-pointer"
-                          title="Eliminar interés"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      ) : (
-                        <span className="text-emerald-600 text-xs font-semibold flex items-center gap-1" title="Interés ya matriculado en Proyecto 2">
-                          <CheckCircle2 size={16} />
-                          <span>Activo</span>
-                        </span>
-                      )}
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {interes.estado !== 'MATRICULADO' ? (
+                          <button
+                            type="button"
+                            onClick={() => removeInterest(interes.id_interes)}
+                            className="text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition cursor-pointer"
+                            title="Eliminar interés"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        ) : (
+                          <span className="text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-emerald-200">
+                            <CheckCircle2 size={14} className="text-emerald-600" />
+                            <span>Matriculado</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4 space-y-2">
-                  <p className="text-xs text-[var(--text-muted)]">
-                    Este prospecto no tiene programas ni módulos de interés vinculados aún.
+                <div className="text-center py-6 space-y-2">
+                  <p className="text-sm text-slate-500">
+                    Este prospecto aún no tiene programas ni módulos vinculados.
                   </p>
                   <Button
                     variant="secondary"
                     onClick={() => setInterestModalOpen(true)}
-                    className="text-xs py-1.5 mx-auto"
+                    className="text-xs py-2 px-4 mx-auto rounded-xl font-semibold"
                   >
-                    <Plus size={14} className="mr-1" /> Vincular Interés Ahora
+                    <Plus size={14} className="mr-1" /> Vincular Primer Curso
                   </Button>
                 </div>
               )}
-            </Card>
+            </div>
 
-            {/* Tarjeta de Comprobantes de Pago y Despacho de Matrícula (RF3.4 / RF4.1 / Fase 3) */}
-            <Card>
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-color-light)]">
-                <h2 className="text-sm font-bold text-[var(--text-heading)] uppercase tracking-wider flex items-center gap-2">
-                  <UploadCloud size={16} className="text-emerald-600" />
+            {/* Tarjeta de Comprobantes de Pago y Despacho de Matrícula */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  <UploadCloud size={18} className="text-emerald-600" />
                   <span>Comprobantes de Pago y Matrícula</span>
                 </h2>
                 {lead.id_etapa === 4 && (user?.rol?.nombre === 'Administrador' || user?.rol?.nombre === 'Vendedor') && (
                   <Link
                     href="/pagos/revision"
-                    className="text-xs font-semibold text-[var(--brand-primary)] hover:underline inline-flex items-center gap-1"
+                    className="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1"
                   >
-                    <span>Ir a Revisión de Pagos</span>
+                    <span>Ir a Cola de Pagos</span>
                     <ExternalLink size={12} />
                   </Link>
                 )}
@@ -525,61 +547,76 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
                   {lead.comprobantes.map((comp) => (
                     <div
                       key={comp.id_comprobante}
-                      className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)] border border-[var(--border-color-light)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                      className="p-4 bg-slate-50/70 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                     >
-                      <div>
+                      <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant={comp.estado === 'APROBADO' ? 'success' : comp.estado === 'RECHAZADO' ? 'danger' : 'warning'}>
+                          <span
+                            className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                              comp.estado === 'APROBADO'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : comp.estado === 'RECHAZADO'
+                                ? 'bg-rose-100 text-rose-800'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
                             {comp.estado}
-                          </Badge>
-                          <span className="text-sm font-bold text-[var(--text-heading)]">
-                            {comp.monto ? `Bs. ${comp.monto}` : 'Monto no declarado'}
+                          </span>
+                          <span className="text-base font-extrabold text-slate-900">
+                            {comp.monto ? `Bs. ${Number(comp.monto).toFixed(2)}` : 'Monto no declarado'}
                           </span>
                           {comp.metodo_pago && (
-                            <span className="text-[10px] font-semibold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                            <span className="text-xs font-semibold bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full">
                               {comp.metodo_pago}
                             </span>
                           )}
                         </div>
 
                         {comp.interes && (
-                          <div className="flex items-center gap-1.5 text-xs text-[var(--brand-primary)] font-semibold mt-1">
-                            <GraduationCap size={13} />
+                          <div className="flex items-center gap-1.5 text-xs text-blue-700 font-semibold mt-1">
+                            <GraduationCap size={14} />
                             <span>Interés: {comp.interes.nombre_snapshot}</span>
                           </div>
                         )}
 
                         {comp.referencia_transaccion && (
-                          <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                          <p className="text-xs text-slate-500 font-mono">
                             Ref: {comp.referencia_transaccion}
                           </p>
                         )}
 
-                        <p className="text-xs text-[var(--text-muted)] mt-1">
-                          Subido por: {comp.subido_por?.nombre_completo || 'Asesor'} el {new Date(comp.created_at).toLocaleString()}
+                        <p className="text-xs text-slate-400">
+                          Registrado por: {comp.subido_por?.nombre_completo || 'Asesor'} · {new Date(comp.created_at).toLocaleDateString()}
                         </p>
+
                         {comp.comentario_rechazo && (
-                          <p className="text-xs text-rose-600 mt-1">
+                          <p className="text-xs text-rose-600 font-medium">
                             Motivo de rechazo: {comp.comentario_rechazo}
                           </p>
                         )}
-                        {/* Estado del envío de matrícula si existe */}
+
                         {comp.envio_matricula && (
-                          <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
-                            <span>Estado Matrícula Grupo 6SC:</span>
-                            <Badge variant={comp.envio_matricula.estado === 'ENVIADO' ? 'success' : 'danger'}>
+                          <div className="mt-2 text-xs flex items-center gap-2 font-medium">
+                            <span className="text-slate-600">Matrícula externa:</span>
+                            <span
+                              className={`px-2 py-0.5 rounded font-bold ${
+                                comp.envio_matricula.estado === 'ENVIADO'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-rose-100 text-rose-800'
+                              }`}
+                            >
                               {comp.envio_matricula.estado}
-                            </Badge>
+                            </span>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <a
                           href={comp.archivo_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-[var(--brand-primary)] hover:underline inline-flex items-center gap-1"
+                          className="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
                         >
                           <FileText size={14} />
                           <span>Ver {comp.tipo_archivo}</span>
@@ -589,11 +626,11 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-[var(--text-muted)] py-2 text-center">
+                <p className="text-xs text-slate-400 py-3 text-center">
                   No se han registrado comprobantes de pago aún.
                 </p>
               )}
-            </Card>
+            </div>
 
             {/* Tarjeta de Recordatorios y Tareas Comerciales (RF4.3) */}
             <Card>
@@ -863,30 +900,50 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
           </form>
         </Modal>
 
-        <Modal isOpen={interestModalOpen} onClose={() => setInterestModalOpen(false)} title="Agregar Interés Académico">
+        <Modal isOpen={interestModalOpen} onClose={() => setInterestModalOpen(false)} title="Vincular Nuevo Interés Académico">
           <form onSubmit={handleInterestSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Tipo</label>
-              <select value={interestType} onChange={(e) => handleInterestTypeChange(e.target.value)} className="w-full px-3 py-2 text-sm border rounded" required>
-                <option value="PROGRAMA">Programa / Cohorte</option>
-                <option value="MODULO">Módulo independiente</option>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Tipo de Oferta</label>
+              <select value={interestType} onChange={(e) => handleInterestTypeChange(e.target.value)} className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-xl font-medium focus:outline-none focus:border-blue-500" required>
+                <option value="PROGRAMA">Programa Completo / Cohorte</option>
+                <option value="MODULO">Módulo Independiente</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Elemento</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Curso o Módulo</label>
               <select
                 value={interestType === 'PROGRAMA' ? interestForm.data.id_version_externo : interestForm.data.id_modulo_externo}
                 onChange={handleInterestOptionChange}
-                className="w-full px-3 py-2 text-sm border rounded"
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-xl font-medium focus:outline-none focus:border-blue-500"
                 required
               >
-                <option value="">Selecciona una opción</option>
+                <option value="">Selecciona un curso disponible</option>
                 {interestOptions.map((option) => <option key={option.id} value={option.id}>{option.nombre}</option>)}
               </select>
             </div>
-            <div className="flex justify-end gap-2">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center justify-between">
+                <span>Descuento Específico para este Curso</span>
+                <span className="text-slate-400 font-normal text-[11px]">(Opcional)</span>
+              </label>
+              <select
+                value={interestForm.data.id_descuento || ''}
+                onChange={(e) => interestForm.setData('id_descuento', e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-xl font-medium focus:outline-none focus:border-blue-500"
+              >
+                <option value="">-- Sin descuento (Arancel oficial) --</option>
+                {(descuentos || []).map((desc) => (
+                  <option key={desc.id_descuento} value={desc.id_descuento}>
+                    {desc.nombre} ({desc.porcentaje}% off)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
               <Button variant="ghost" type="button" onClick={() => setInterestModalOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={interestForm.processing}>Guardar Interés</Button>
+              <Button type="submit" variant="primary" disabled={interestForm.processing} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold">
+                {interestForm.processing ? 'Guardando...' : 'Guardar Interés'}
+              </Button>
             </div>
           </form>
         </Modal>

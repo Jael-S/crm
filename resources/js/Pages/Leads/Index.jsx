@@ -64,16 +64,16 @@ export default function LeadsIndex({ leads, filters, origenes = [], etapas = [],
       <Head title="Prospectos (Leads)" />
 
       <div className="space-y-6">
-        {/* Cabecera de Página */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-heading)] flex items-center gap-2">
-              <UserCheck className="text-[var(--brand-primary)]" size={28} />
-              <span>Prospectos (Leads)</span>
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <UserCheck className="text-blue-600" size={24} />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Mis Prospectos
             </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              Cartera comercial de prospectos y postulantes a diplomados y programas.
-            </p>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+              {leads.total || leads.data?.length || 0} registrados
+            </span>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -244,14 +244,14 @@ export default function LeadsIndex({ leads, filters, origenes = [], etapas = [],
                         <div className="inline-flex items-center gap-1.5 justify-end">
                           <Link
                             href={`/leads/${lead.id_lead}`}
-                            className="p-1.5 text-[var(--color-secondary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-highlight)] rounded transition"
+                            className="p-1.5 text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"
                             title="Ver Ficha Detallada"
                           >
                             <Eye size={17} />
                           </Link>
                           <Link
                             href={`/leads/${lead.id_lead}/edit`}
-                            className="p-1.5 text-[var(--color-secondary)] hover:text-[var(--brand-primary)] hover:bg-[var(--bg-highlight)] rounded transition"
+                            className="p-1.5 text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"
                             title="Editar Datos"
                           >
                             <Edit2 size={17} />

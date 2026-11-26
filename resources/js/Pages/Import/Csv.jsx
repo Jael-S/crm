@@ -62,17 +62,13 @@ export default function CsvImport({ historial = [], origenes = [] }) {
             {flash.error}
           </div>
         )}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-[var(--text-heading)]">
-                <FileSpreadsheet className="text-[var(--brand-primary)]" size={28} />
-                Importar prospectos
-              </h1>
-              <p className="mt-1 text-sm text-[var(--text-muted)]">
-                Carga leads de forma masiva y consulta el resultado de cada importación.
-              </p>
-            </div>
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <FileSpreadsheet className="text-blue-600" size={24} />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Importar Prospectos (CSV)
+            </h1>
           </div>
           <Link href="/leads">
             <Button variant="secondary" className="w-full sm:w-auto">

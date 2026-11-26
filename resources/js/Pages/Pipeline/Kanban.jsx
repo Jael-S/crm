@@ -232,23 +232,58 @@ export default function PipelineKanban({
     setConversionModalData(null);
   };
 
-  // Colores temáticos por etapa
+  // Colores temáticos y acentos por etapa comercial
   const getStageBadgeStyle = (stageId) => {
     switch (stageId) {
       case 1: // Nuevo
-        return { bg: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' };
+        return {
+          topBorder: 'border-t-4 border-t-blue-500',
+          dot: 'bg-blue-500',
+          countBadge: 'bg-blue-50 text-blue-700 border-blue-200',
+          accent: 'text-blue-700',
+        };
       case 2: // En Contacto
-        return { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' };
+        return {
+          topBorder: 'border-t-4 border-t-amber-500',
+          dot: 'bg-amber-500',
+          countBadge: 'bg-amber-50 text-amber-700 border-amber-200',
+          accent: 'text-amber-700',
+        };
       case 3: // Seguimiento
-        return { bg: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' };
+        return {
+          topBorder: 'border-t-4 border-t-purple-500',
+          dot: 'bg-purple-500',
+          countBadge: 'bg-purple-50 text-purple-700 border-purple-200',
+          accent: 'text-purple-700',
+        };
       case 4: // Promesa de Pago
-        return { bg: 'bg-cyan-50 text-cyan-700 border-cyan-200', dot: 'bg-cyan-500' };
+        return {
+          topBorder: 'border-t-4 border-t-cyan-500',
+          dot: 'bg-cyan-500',
+          countBadge: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+          accent: 'text-cyan-700',
+        };
       case 5: // Convertido
-        return { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' };
+        return {
+          topBorder: 'border-t-4 border-t-emerald-500',
+          dot: 'bg-emerald-500',
+          countBadge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          accent: 'text-emerald-700',
+        };
       case 6: // Perdido
-        return { bg: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' };
+        return {
+          topBorder: 'border-t-4 border-t-rose-500',
+          dot: 'bg-rose-500',
+          countBadge: 'bg-rose-50 text-rose-700 border-rose-200',
+          accent: 'text-rose-700',
+        };
       default:
-        return { bg: 'bg-gray-50 text-gray-700 border-gray-200', dot: 'bg-gray-500' };
+        return {
+          topBorder: 'border-t-4 border-t-slate-400',
+          dot: 'bg-slate-400',
+          countBadge: 'bg-slate-50 text-slate-700 border-slate-200',
+          accent: 'text-slate-700',
+        };
     }
   };
 
@@ -257,16 +292,16 @@ export default function PipelineKanban({
       <Head title="Pipeline Comercial (Kanban) - CRM Educativo" />
 
       <div className="space-y-6">
-        {/* Cabecera y Filtros */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-2 border-b border-[var(--border-color-light)]">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-heading)] flex items-center gap-2">
-              <KanbanIcon className="text-[var(--brand-primary)]" size={26} />
-              Pipeline de Ventas
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <KanbanIcon className="text-blue-600" size={24} />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Tablero Pipeline
             </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              Tablero comercial interactivo: arrastra y suelta prospectos entre las 6 etapas del embudo.
-            </p>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+              {totalLeads} prospectos
+            </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
@@ -281,7 +316,7 @@ export default function PipelineKanban({
                 placeholder="Buscar prospecto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-3 py-2 text-xs bg-[var(--bg-surface)] border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)] w-48 sm:w-56"
+                className="pl-9 pr-3 py-2 text-xs bg-[var(--bg-surface)] border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)] w-48 sm:w-56 shadow-2xs"
               />
             </form>
 
@@ -300,7 +335,7 @@ export default function PipelineKanban({
                     { preserveState: true, replace: true }
                   );
                 }}
-                className="py-2 px-3 text-xs bg-[var(--bg-surface)] border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)]"
+                className="py-2 px-3 text-xs bg-[var(--bg-surface)] border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)] shadow-2xs"
               >
                 <option value="">Todos los asesores</option>
                 {vendedores.map((v) => (
@@ -315,7 +350,7 @@ export default function PipelineKanban({
               type="button"
               variant="primary"
               onClick={() => router.visit('/leads/create')}
-              className="inline-flex items-center gap-1.5 text-xs py-2 px-3 cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs py-2 px-3 cursor-pointer shadow-xs"
             >
               <Plus size={16} />
               Nuevo Prospecto
@@ -323,7 +358,7 @@ export default function PipelineKanban({
           </div>
         </div>
 
-        {/* Tablero Kanban (6 Columnas con scroll horizontal fluido) */}
+        {/* Tablero Kanban (6 Columnas con scroll horizontal fluido y fondo claro moderno) */}
         <div className="overflow-x-auto pb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 min-w-[1280px]">
             {boardColumns.map((columna) => {
@@ -336,23 +371,23 @@ export default function PipelineKanban({
                   onDragOver={(e) => handleDragOver(e, columna.id_etapa)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, columna.id_etapa)}
-                  className={`flex flex-col bg-[var(--bg-sidebar)] border rounded-[var(--radius-lg)] transition-all min-h-[560px] max-h-[calc(100vh-220px)] ${
+                  className={`flex flex-col bg-slate-100/90 border border-slate-200/90 rounded-2xl transition-all min-h-[580px] max-h-[calc(100vh-210px)] shadow-xs ${
                     isOver
-                      ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 bg-blue-50/20'
-                      : 'border-[var(--border-color-light)]'
+                      ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/40'
+                      : 'border-slate-200/80'
                   }`}
                 >
-                  {/* Cabecera de Columna */}
-                  <div className="p-3 bg-[var(--bg-surface)] border-b border-[var(--border-color-light)] rounded-t-[var(--radius-lg)] flex items-center justify-between sticky top-0 z-10 shadow-xs">
+                  {/* Cabecera de Columna Clara con Acento Superior */}
+                  <div className={`p-3.5 bg-white border-b border-slate-200 rounded-t-2xl flex items-center justify-between sticky top-0 z-10 shadow-xs ${style.topBorder}`}>
                     <div className="flex items-center gap-2">
                       <span className={`w-2.5 h-2.5 rounded-full ${style.dot}`} />
-                      <span className="text-xs font-bold text-[var(--text-heading)] truncate">
+                      <span className="text-xs font-bold text-slate-900 truncate">
                         {columna.nombre}
                       </span>
                       {columna.id_etapa === 4 && canHandlePayments && (
                         <Link
                           href="/pagos/revision"
-                          className="text-[var(--brand-primary)] hover:text-blue-700 transition ml-0.5"
+                          className="text-cyan-600 hover:text-cyan-700 transition ml-0.5"
                           title="Ir a Cola de Revisión de Pagos"
                         >
                           <ExternalLink size={12} />
@@ -360,18 +395,18 @@ export default function PipelineKanban({
                       )}
                     </div>
                     <span
-                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${style.bg}`}
+                      className={`text-[11px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${style.countBadge}`}
                     >
                       {columna.leads?.length || 0}
                     </span>
                   </div>
 
                   {/* Lista de Tarjetas de Prospectos */}
-                  <div className="p-2 space-y-2.5 flex-1 overflow-y-auto">
+                  <div className="p-2.5 space-y-3 flex-1 overflow-y-auto">
                     {columna.leads?.length === 0 ? (
-                      <div className="h-32 flex flex-col items-center justify-center text-center p-3 text-xs text-[var(--text-muted)] border-2 border-dashed border-[var(--border-color-light)] rounded-[var(--radius-md)]">
-                        <span>Sin prospectos</span>
-                        <span className="text-[10px] mt-0.5">Arrastra aquí para mover</span>
+                      <div className="h-36 flex flex-col items-center justify-center text-center p-4 text-xs text-slate-400 border-2 border-dashed border-slate-200/90 rounded-xl bg-white/50">
+                        <span className="font-semibold text-slate-500">Sin prospectos</span>
+                        <span className="text-[11px] mt-1 text-slate-400">Arrastra aquí para mover</span>
                       </div>
                     ) : (
                       columna.leads.map((lead) => {
@@ -383,17 +418,17 @@ export default function PipelineKanban({
                             key={lead.id_lead}
                             draggable={canDrag}
                             onDragStart={(e) => handleDragStart(e, lead, columna.id_etapa)}
-                            className={`bg-[var(--bg-surface)] border border-[var(--border-color-light)] p-3 rounded-[var(--radius-md)] shadow-xs transition-all relative group ${
+                            className={`bg-white border border-slate-200/90 p-3.5 rounded-xl shadow-xs transition-all duration-150 relative group ${
                               canDrag
-                                ? 'cursor-grab active:cursor-grabbing hover:shadow-md hover:border-[var(--border-color-dark)] hover:-translate-y-0.5'
+                                ? 'cursor-grab active:cursor-grabbing hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5'
                                 : 'opacity-85 cursor-default'
                             }`}
                           >
                             {/* Nombre del Prospecto y Link a Detalle */}
-                            <div className="flex items-start justify-between gap-1.5 mb-1.5">
+                            <div className="flex items-start justify-between gap-1.5 mb-2">
                               <Link
                                 href={`/leads/${lead.id_lead}`}
-                                className="text-xs font-bold text-[var(--text-heading)] hover:text-[var(--color-primary)] transition line-clamp-1 flex-1"
+                                className="text-xs font-bold text-slate-900 hover:text-blue-600 transition line-clamp-1 flex-1"
                                 title={lead.nombre}
                               >
                                 {lead.nombre}
@@ -401,16 +436,16 @@ export default function PipelineKanban({
                               <Link
                                 href={`/leads/${lead.id_lead}`}
                                 title="Ver ficha completa"
-                                className="text-[var(--text-muted)] hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition p-0.5"
+                                className="text-slate-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition p-0.5"
                               >
                                 <ExternalLink size={13} />
                               </Link>
                             </div>
 
                             {/* Teléfono y WhatsApp rápido */}
-                            <div className="flex items-center justify-between text-[11px] text-[var(--text-muted)] mb-2">
-                              <span className="flex items-center gap-1 font-mono">
-                                <Phone size={12} />
+                            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2.5">
+                              <span className="flex items-center gap-1 font-mono text-slate-600">
+                                <Phone size={12} className="text-slate-400" />
                                 {lead.telefono}
                               </span>
                               {cleanPhone && (
@@ -421,18 +456,38 @@ export default function PipelineKanban({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title="Abrir WhatsApp"
-                                  className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-1 rounded-full transition"
+                                  className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-lg border border-emerald-200/60 shadow-2xs transition"
                                 >
                                   <MessageCircle size={13} />
                                 </a>
                               )}
                             </div>
 
+                            {/* Intereses / Cursos si existen */}
+                            {lead.intereses && lead.intereses.length > 0 && (
+                              <div className="mb-2 flex flex-wrap gap-1">
+                                {lead.intereses.slice(0, 2).map((item, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-md font-medium truncate max-w-[170px]"
+                                    title={item.nombre_curso}
+                                  >
+                                    {item.nombre_curso}
+                                  </span>
+                                ))}
+                                {lead.intereses.length > 2 && (
+                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-medium">
+                                    +{lead.intereses.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                             {/* Canal de Origen */}
                             {lead.origen && (
-                              <div className="mb-2">
-                                <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-[var(--radius-sm)] font-medium inline-flex items-center gap-1">
-                                  <Share2 size={10} />
+                              <div className="mb-2.5">
+                                <span className="text-[10px] bg-sky-50 text-sky-800 border border-sky-100 px-2 py-0.5 rounded-md font-semibold inline-flex items-center gap-1">
+                                  <Share2 size={10} className="text-sky-600" />
                                   {lead.origen.nombre}
                                 </span>
                               </div>
@@ -440,17 +495,17 @@ export default function PipelineKanban({
 
                             {/* Info de Pérdida en la columna 6 */}
                             {columna.id_etapa === 6 && lead.motivo_perdida && (
-                              <div className="mb-2 p-1.5 bg-rose-50 border border-rose-100 rounded-[var(--radius-sm)] text-[10px] text-rose-700">
-                                <span className="font-semibold block text-[9px] uppercase tracking-wider text-rose-500">Motivo de descarte:</span>
+                              <div className="mb-2.5 p-2 bg-rose-50 border border-rose-200 rounded-lg text-[10px] text-rose-800">
+                                <span className="font-bold block text-[9px] uppercase tracking-wider text-rose-600 mb-0.5">Motivo de descarte:</span>
                                 {lead.motivo_perdida.nombre}
                               </div>
                             )}
 
                             {/* Pie de tarjeta: Asesor asignado */}
-                            <div className="mt-2 pt-2 border-t border-[var(--border-color-light)] flex items-center justify-between text-[11px]">
-                              <div className="flex items-center gap-1 text-[var(--text-muted)] truncate">
-                                <User size={12} />
-                                <span className="truncate">
+                            <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-1.5 text-slate-500 truncate">
+                                <User size={12} className="text-slate-400" />
+                                <span className="truncate font-medium">
                                   {lead.vendedor ? lead.vendedor.nombre_completo : 'Bolsa Común'}
                                 </span>
                               </div>

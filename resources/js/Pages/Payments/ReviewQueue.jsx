@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import Card from '@/Shared/Card';
 import Button from '@/Shared/Button';
-import Badge from '@/Shared/Badge';
 import Modal from '@/Shared/Modal';
 import PaymentUploadModal from '@/Shared/PaymentUploadModal';
 import {
@@ -12,18 +10,15 @@ import {
   FileText,
   ExternalLink,
   Clock,
-  User,
   AlertCircle,
   UploadCloud,
-  DollarSign,
   Phone,
   MessageCircle,
-  Tag,
   GraduationCap,
-  Layers,
-  ArrowRight,
   Eye,
-  Image as ImageIcon
+  LoaderCircle,
+  ShieldCheck,
+  RefreshCw
 } from 'lucide-react';
 
 export default function ReviewQueue({
@@ -35,8 +30,11 @@ export default function ReviewQueue({
   const user = auth?.user;
   const isAdmin = user?.rol?.nombre === 'Administrador';
 
-  // Control de pestañas: 'promesas' (Prospectos esperando comprobante) o 'revision' (Cola de comprobantes)
+  // Control de pestañas: 'promesas' (Prospectos en Promesa) o 'revision' (Cola de comprobantes)
   const [activeTab, setActiveTab] = useState('promesas');
+
+  // Estado de aprobación con LOADER explícito
+  const [approvingId, setApprovingId] = useState(null);
 
   // Modal para rechazar comprobante (solo Admin)
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -53,7 +51,7 @@ export default function ReviewQueue({
     setPreviewModalOpen(true);
   };
 
-  // Modal para subir comprobante enriquecido
+  // Modal para subir comprobante
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedLeadForUpload, setSelectedLeadForUpload] = useState(null);
 
@@ -62,9 +60,14 @@ export default function ReviewQueue({
     setUploadModalOpen(true);
   };
 
+  // Disparar Aprobación con feedback y Spinner
   const handleApprove = (id) => {
-    if (confirm('¿Confirmar aprobación del comprobante? Esta acción avanzará al prospecto a Convertido y enviará los datos de matrícula a la API externa.')) {
-      router.post(`/pagos/${id}/aprobar`, {}, { preserveScroll: true });
+    if (confirm('¿Confirmar aprobación del comprobante y matricular en el microservicio de Proyecto 2?')) {
+      setApprovingId(id);
+      router.post(`/pagos/${id}/aprobar`, {}, {
+        preserveScroll: true,
+        onFinish: () => setApprovingId(null),
+      });
     }
   };
 
@@ -79,6 +82,7 @@ export default function ReviewQueue({
     setRejectProcessing(true);
 
     router.post(`/pagos/${selectedComprobante.id_comprobante}/rechazar`, { motivo: motivoRechazo }, {
+      preserveScroll: true,
       onSuccess: () => {
         setRejectModalOpen(false);
         setRejectProcessing(false);
@@ -89,48 +93,99 @@ export default function ReviewQueue({
 
   const getStatusBadge = (estado) => {
     switch (estado) {
-      case 'PENDIENTE': return <Badge variant="warning">Pendiente de Revisión</Badge>;
-      case 'APROBADO': return <Badge variant="success">Aprobado</Badge>;
-      case 'RECHAZADO': return <Badge variant="danger">Rechazado</Badge>;
-      case 'ERROR': return <Badge variant="danger">Error en Matrícula (No Aprobado)</Badge>;
-      default: return <Badge variant="info">{estado}</Badge>;
+      case 'PENDIENTE':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+            <Clock size={12} />
+            <span>Pendiente de Revisión</span>
+          </span>
+        );
+      case 'APROBADO':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <CheckCircle2 size={12} />
+            <span>Aprobado</span>
+          </span>
+        );
+      case 'RECHAZADO':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200">
+            <XCircle size={12} />
+            <span>Rechazado</span>
+          </span>
+        );
+      case 'ERROR':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-900 border border-rose-300">
+            <AlertCircle size={12} />
+            <span>Error en Matrícula</span>
+          </span>
+        );
+      default:
+        return (
+          <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+            {estado}
+          </span>
+        );
     }
   };
 
-  const pendingProofsCount = comprobantes?.data?.filter((c) => c.estado === 'PENDIENTE' || c.estado === 'ERROR')?.length || 0;
+  const pendingCount = comprobantes?.data?.filter((c) => c.estado === 'PENDIENTE' || c.estado === 'ERROR')?.length || 0;
 
   return (
     <AppLayout>
-      <Head title="Revisión y Seguimiento de Pagos" />
+      <Head title="Gestión y Revisión de Pagos" />
 
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Cabecera Principal */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-heading)] flex items-center gap-2">
-              <CheckCircle2 size={24} className="text-[var(--brand-primary)]" />
-              <span>Gestión y Revisión de Pagos</span>
+      <div className="space-y-6">
+
+        {/* Cabecera Uniforme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="text-blue-600" size={24} />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Revisión de Pagos
             </h1>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              Control de prospectos en promesa de pago, registro de comprobantes con aranceles oficiales y aprobación de matrículas.
-            </p>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold border border-amber-200">
+              {pendingCount} pendientes
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-3 py-1.5 rounded-lg bg-cyan-50 text-cyan-800 font-semibold border border-cyan-200">
+              {leadsEnPromesa.length} en promesa
+            </span>
           </div>
         </div>
 
-        {/* Selector de Pestañas */}
-        <div className="flex border-b border-[var(--border-color-light)] gap-2">
+        {/* Loader Overlay de Aprobación */}
+        {approvingId && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 flex items-center justify-between animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
+              <div>
+                <p className="text-sm font-bold">Matriculando en microservicio de Proyecto 2...</p>
+                <p className="text-xs text-blue-700">
+                  Conectando con el servidor externo en Render para formalizar el registro del estudiante. Por favor espere.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. Selector de Pestañas Limpio */}
+        <div className="flex border-b border-slate-200 gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('promesas')}
-            className={`pb-3 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+            className={`pb-3 px-5 text-sm font-semibold flex items-center gap-2 border-b-2 transition cursor-pointer ${
               activeTab === 'promesas'
-                ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
-                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)]'
+                ? 'border-blue-600 text-blue-700 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
             <Clock size={16} />
             <span>Prospectos en Promesa de Pago</span>
-            <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 font-bold">
+            <span className="ml-1 text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold">
               {leadsEnPromesa.length}
             </span>
           </button>
@@ -138,17 +193,17 @@ export default function ReviewQueue({
           <button
             type="button"
             onClick={() => setActiveTab('revision')}
-            className={`pb-3 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+            className={`pb-3 px-5 text-sm font-semibold flex items-center gap-2 border-b-2 transition cursor-pointer ${
               activeTab === 'revision'
-                ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
-                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)]'
+                ? 'border-blue-600 text-blue-700 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
             <FileText size={16} />
-            <span>Cola de Comprobantes Subidos</span>
-            {pendingProofsCount > 0 && (
-              <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
-                {pendingProofsCount} pendientes
+            <span>Cola de Comprobantes</span>
+            {pendingCount > 0 && (
+              <span className="ml-1 text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
+                {pendingCount} pendientes
               </span>
             )}
           </button>
@@ -156,148 +211,142 @@ export default function ReviewQueue({
 
         {/* PESTAÑA 1: PROSPECTOS EN PROMESA DE PAGO */}
         {activeTab === 'promesas' && (
-          <Card>
-            <div className="p-4 bg-cyan-50/50 border-b border-cyan-100 flex items-start justify-between">
-              <div>
-                <h2 className="text-sm font-bold text-cyan-950 flex items-center gap-1.5">
-                  <Clock size={16} className="text-cyan-600" />
-                  <span>Prospectos en SEGUIMIENTO DE PAGO (Etapa 4)</span>
-                </h2>
-              </div>
-            </div>
-
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[var(--border-color-light)] text-[var(--text-muted)] text-xs uppercase tracking-wider bg-gray-50/50">
-                    <th className="py-3 px-4 font-semibold">Prospecto / Contacto</th>
-                    <th className="py-3 px-4 font-semibold">Interés Académico (API 2)</th>
-                    <th className="py-3 px-4 font-semibold">Asesor Asignado</th>
-                    <th className="py-3 px-4 font-semibold">Descuento Comercial</th>
-                    <th className="py-3 px-4 font-semibold text-center">Estado Comprobante</th>
-                    <th className="py-3 px-4 font-semibold text-right">Acción</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500 text-xs uppercase tracking-wider">
+                    <th className="py-4 px-5 font-bold">Prospecto</th>
+                    <th className="py-4 px-5 font-bold">Programas de Interés</th>
+                    <th className="py-4 px-5 font-bold">Asesor</th>
+                    <th className="py-4 px-5 font-bold text-center">Estado Comprobante</th>
+                    <th className="py-4 px-5 font-bold text-right">Acción</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-color-light)]">
+                <tbody className="divide-y divide-slate-100 text-sm">
                   {leadsEnPromesa.length > 0 ? (
                     leadsEnPromesa.map((lead) => {
                       const cleanPhone = (lead.telefono || '').replace(/\D/g, '');
+
+                      // Verificar si todos sus cursos ya tienen comprobante o están matriculados
+                      const allBlocked = (lead.intereses || []).length > 0 && (lead.intereses || []).every((it) => {
+                        const hasProof = lead.comprobantes?.some(
+                          (c) => c.id_interes === it.id_interes && (c.estado === 'PENDIENTE' || c.estado === 'APROBADO')
+                        );
+                        return hasProof || it.estado === 'MATRICULADO';
+                      });
+
                       const tieneComprobantePendiente = lead.comprobantes?.some((c) => c.estado === 'PENDIENTE');
                       const tieneComprobanteAprobado = lead.comprobantes?.some((c) => c.estado === 'APROBADO');
 
                       return (
-                        <tr key={lead.id_lead} className="hover:bg-gray-50/60 transition">
+                        <tr key={lead.id_lead} className="hover:bg-slate-50/80 transition">
                           {/* Prospecto */}
-                          <td className="py-3.5 px-4">
+                          <td className="py-4 px-5">
                             <Link
                               href={`/leads/${lead.id_lead}`}
-                              className="font-bold text-[var(--text-heading)] hover:text-[var(--brand-primary)] block"
+                              className="font-bold text-slate-900 hover:text-blue-600 block text-base"
                             >
                               {lead.nombre}
                             </Link>
-                            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mt-1">
-                              <span className="flex items-center gap-1 font-mono">
-                                <Phone size={11} /> {lead.telefono || 'Sin teléfono'}
-                              </span>
+                            <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                              <span>CI: {lead.ci || 'Sin CI'}</span>
+                              <span>·</span>
+                              <span className="font-mono">{lead.telefono || 'Sin teléfono'}</span>
                               {cleanPhone && (
                                 <a
-                                  href={`https://wa.me/591${cleanPhone}?text=Hola%20${encodeURIComponent(lead.nombre)},%20te%20escribo%20del%20área%20de%20admisiones.`}
+                                  href={`https://wa.me/591${cleanPhone}?text=Hola%20${encodeURIComponent(lead.nombre)},%20te%20escribimos%20de%20UNEXO.`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 p-0.5 rounded-full"
+                                  className="text-emerald-600 hover:text-emerald-700"
                                   title="Enviar WhatsApp"
                                 >
-                                  <MessageCircle size={12} />
+                                  <MessageCircle size={14} />
                                 </a>
                               )}
                             </div>
                           </td>
 
-                          {/* Interés Académico */}
-                          <td className="py-3.5 px-4 text-xs">
+                          {/* Intereses Académicos */}
+                          <td className="py-4 px-5">
                             {lead.intereses && lead.intereses.length > 0 ? (
-                              <div className="space-y-1.5">
-                                {lead.intereses.map((it, i) => (
-                                  <div key={i} className="flex flex-col gap-0.5 text-[var(--text-heading)]">
-                                    <div className="flex items-center gap-1.5">
-                                      <GraduationCap size={13} className="text-[var(--brand-primary)] shrink-0" />
-                                      <span className="font-semibold line-clamp-1">
-                                        {it.nombre_snapshot || it.tipo}
+                              <div className="space-y-1.5 max-w-sm">
+                                {lead.intereses.map((it) => (
+                                  <div key={it.id_interes} className="flex items-center justify-between text-xs gap-2">
+                                    <div className="flex items-center gap-1.5 truncate">
+                                      <GraduationCap size={14} className="text-blue-600 shrink-0" />
+                                      <span className="font-medium text-slate-800 truncate">
+                                        {it.nombre_snapshot}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-2 pl-4">
-                                      <span
-                                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                                          it.estado === 'MATRICULADO'
-                                            ? 'bg-emerald-100 text-emerald-800'
-                                            : it.estado === 'EN_PAGO'
-                                            ? 'bg-amber-100 text-amber-800'
-                                            : 'bg-slate-100 text-slate-700'
-                                        }`}
-                                      >
-                                        {it.estado || 'EN_SEGUIMIENTO'}
-                                      </span>
-                                      {it.monto_pactado && (
-                                        <span className="text-[10px] text-emerald-700 font-semibold">
-                                          Bs. {it.monto_pactado}
-                                        </span>
-                                      )}
-                                    </div>
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[11px] font-semibold shrink-0 ${
+                                        it.estado === 'MATRICULADO'
+                                          ? 'bg-emerald-100 text-emerald-800'
+                                          : it.estado === 'EN_PAGO'
+                                          ? 'bg-amber-100 text-amber-800'
+                                          : 'bg-slate-100 text-slate-600'
+                                      }`}
+                                    >
+                                      {it.estado || 'EN_SEGUIMIENTO'}
+                                    </span>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-amber-600 font-semibold flex items-center gap-1">
-                                <AlertCircle size={13} /> Sin interés vinculado
-                              </span>
+                              <span className="text-xs text-slate-400">Sin intereses vinculados</span>
                             )}
                           </td>
 
                           {/* Asesor */}
-                          <td className="py-3.5 px-4 text-xs text-[var(--text-muted)]">
+                          <td className="py-4 px-5 text-xs text-slate-600">
                             {lead.vendedor?.nombre_completo || 'Bolsa Común'}
                           </td>
 
-                          {/* Descuento */}
-                          <td className="py-3.5 px-4 text-xs">
-                            {lead.descuento ? (
-                              <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">
-                                <Tag size={12} />
-                                {lead.descuento.nombre} ({lead.descuento.porcentaje}%)
+                          {/* Estado Comprobante */}
+                          <td className="py-4 px-5 text-center">
+                            {tieneComprobanteAprobado ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800">
+                                <CheckCircle2 size={12} />
+                                <span>Aprobado</span>
+                              </span>
+                            ) : tieneComprobantePendiente ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800">
+                                <Clock size={12} />
+                                <span>En Revisión</span>
                               </span>
                             ) : (
-                              <span className="text-gray-400">Sin descuento</span>
-                            )}
-                          </td>
-
-                          {/* Estado Comprobante */}
-                          <td className="py-3.5 px-4 text-center">
-                            {tieneComprobanteAprobado ? (
-                              <Badge variant="success">Pago Aprobado</Badge>
-                            ) : tieneComprobantePendiente ? (
-                              <Badge variant="warning">En Revisión</Badge>
-                            ) : (
-                              <span className="text-xs text-gray-400">Sin comprobante</span>
+                              <span className="text-xs text-slate-400">Sin comprobante</span>
                             )}
                           </td>
 
                           {/* Acción */}
-                          <td className="py-1.5 px-1 text-right">
-                            <Button
-                              variant="primary"
-                              onClick={() => handleOpenUpload(lead)}
-                              className="text-xs py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 inline-flex items-center"
-                            >
-                              <UploadCloud size={14} />
-                              <span>Subir Comprobante</span>
-                            </Button>
+                          <td className="py-4 px-5 text-right">
+                            {allBlocked ? (
+                              <span
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-500 cursor-not-allowed"
+                                title="Todos los cursos de este prospecto ya cuentan con comprobante en revisión o están matriculados"
+                              >
+                                <CheckCircle2 size={14} className="text-slate-400" />
+                                <span>Comprobantes Subidos</span>
+                              </span>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                onClick={() => handleOpenUpload(lead)}
+                                className="text-xs py-2 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl inline-flex items-center gap-1.5 font-semibold"
+                              >
+                                <UploadCloud size={15} />
+                                <span>Subir Comprobante</span>
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       );
                     })
                   ) : (
                     <tr>
-                      <td colSpan={6} className="py-10 text-center text-xs text-[var(--text-muted)]">
+                      <td colSpan={5} className="py-12 text-center text-sm text-slate-400">
                         No hay prospectos actualmente en la etapa de <strong>Promesa de Pago</strong>.
                       </td>
                     </tr>
@@ -305,204 +354,316 @@ export default function ReviewQueue({
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* PESTAÑA 2: COLA DE COMPROBANTES SUBIDOS */}
         {activeTab === 'revision' && (
-          <Card>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[var(--border-color-light)] text-[var(--text-muted)] text-xs uppercase tracking-wider bg-gray-50/50">
-                    <th className="py-3 px-4 font-semibold">Fecha de Subida</th>
-                    <th className="py-3 px-4 font-semibold">Prospecto / Alumno</th>
-                    <th className="py-3 px-4 font-semibold">Monto Declarado</th>
-                    <th className="py-3 px-4 font-semibold">Comprobante</th>
-                    <th className="py-3 px-4 font-semibold text-center">Estado</th>
-                    <th className="py-3 px-4 font-semibold text-right">Acciones</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500 text-xs uppercase tracking-wider">
+                    <th className="py-4 px-5 font-bold">Fecha</th>
+                    <th className="py-4 px-5 font-bold">Prospecto / Curso</th>
+                    <th className="py-4 px-5 font-bold">Monto / Método</th>
+                    <th className="py-4 px-5 font-bold">Comprobante</th>
+                    <th className="py-4 px-5 font-bold text-center">Estado</th>
+                    <th className="py-4 px-5 font-bold text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-color-light)]">
+                <tbody className="divide-y divide-slate-100 text-sm">
                   {comprobantes?.data?.length > 0 ? (
-                    comprobantes.data.map((c) => (
-                      <tr key={c.id_comprobante} className="hover:bg-gray-50/60 transition">
-                        <td className="py-3.5 px-4 text-xs text-[var(--text-muted)]">
-                          <span className="block font-medium text-[var(--text-heading)]">
-                            {new Date(c.created_at).toLocaleDateString()}
-                          </span>
-                          <span>{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <Link
-                            href={`/leads/${c.lead?.id_lead}`}
-                            className="font-bold text-[var(--text-heading)] hover:text-[var(--brand-primary)] block"
-                          >
-                            {c.lead?.nombre}
-                          </Link>
-                          {c.interes ? (
-                            <div className="flex items-center gap-1 text-xs text-[var(--brand-primary)] font-semibold mt-1">
-                              <GraduationCap size={12} className="shrink-0" />
-                              <span className="truncate max-w-xs">{c.interes.nombre_snapshot}</span>
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-gray-400 block mt-0.5">Interés general</span>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)] mt-1">
-                            {c.metodo_pago && (
-                              <span className="font-semibold px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px]">
-                                {c.metodo_pago}
-                              </span>
-                            )}
-                            {c.referencia_transaccion && (
-                              <span className="font-mono text-[10px] text-gray-500">
-                                Ref: {c.referencia_transaccion}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[11px] text-[var(--text-muted)] block mt-0.5">
-                            Subido por: {c.subido_por?.nombre_completo || 'Asesor'}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-[var(--text-heading)]">
-                          {c.monto ? `Bs. ${c.monto}` : <em className="text-gray-400 font-normal">No especificado</em>}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2.5">
-                            {c.tipo_archivo === 'imagen' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenPreview(c)}
-                                className="w-11 h-11 shrink-0 rounded-[var(--radius-sm)] border border-[var(--border-color-dark)] overflow-hidden bg-gray-100 hover:opacity-85 hover:ring-2 hover:ring-[var(--brand-primary)] transition cursor-pointer relative group"
-                                title="Clic para ver comprobante"
-                              >
-                                <img
-                                  src={c.archivo_url}
-                                  alt={`Comprobante ${c.lead?.nombre}`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                                <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                  <Eye size={14} className="text-white" />
-                                </div>
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenPreview(c)}
-                                className="w-11 h-11 shrink-0 rounded-[var(--radius-sm)] border border-red-200 bg-red-50 flex items-center justify-center text-red-600 hover:bg-red-100 transition cursor-pointer"
-                                title="Clic para ver PDF"
-                              >
-                                <FileText size={20} />
-                              </button>
-                            )}
+                    comprobantes.data.map((c) => {
+                      const isApproving = approvingId === c.id_comprobante;
 
-                            <div className="flex flex-col text-xs">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenPreview(c)}
-                                className="font-semibold text-[var(--brand-primary)] hover:underline inline-flex items-center gap-1 text-left cursor-pointer"
-                              >
-                                <Eye size={13} />
-                                <span>Ver Foto / Archivo</span>
-                              </button>
-                              <a
-                                href={c.archivo_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-heading)] inline-flex items-center gap-1 mt-0.5"
-                              >
-                                <span>Abrir enlace</span>
-                                <ExternalLink size={10} />
-                              </a>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          {getStatusBadge(c.estado)}
-                          {c.comentario_rechazo && (
-                            <p className="text-[11px] text-red-600 mt-1 max-w-xs truncate mx-auto" title={c.comentario_rechazo}>
-                              Motivo: {c.comentario_rechazo}
-                            </p>
-                          )}
-                          {/* Estado de Despacho de Matrícula (Proyecto 2) */}
-                          {c.envio_matricula && (
-                            <div className="mt-1.5 pt-1.5 border-t border-gray-100 flex flex-col items-center">
-                              {c.envio_matricula.estado === 'ENVIADO' ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-semibold">
-                                  <CheckCircle2 size={11} />
-                                  <span>Matriculado en Proyecto 2</span>
-                                </span>
-                              ) : (
-                                <div className="space-y-1">
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full font-semibold">
-                                    <AlertCircle size={11} />
-                                    <span>Error Matrícula P2</span>
-                                  </span>
-                                  <p className="text-[10px] text-rose-600 max-w-xs mx-auto truncate" title={c.envio_matricula.respuesta_api}>
-                                    {c.envio_matricula.respuesta_api}
-                                  </p>
-                                  {isAdmin && (
-                                    <button
-                                      type="button"
-                                      onClick={() => router.post(`/pagos/envios/${c.envio_matricula.id_envio}/reintentar`, {}, { preserveScroll: true })}
-                                      className="text-[10px] text-[var(--brand-primary)] hover:underline font-semibold block mx-auto cursor-pointer"
-                                    >
-                                      ↻ Reintentar matrícula
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          {c.estado === 'PENDIENTE' || c.estado === 'ERROR' ? (
-                            isAdmin ? (
-                              <div className="flex items-center justify-end gap-2">
-                                <Button
-                                  variant="secondary"
-                                  onClick={() => openRejectModal(c)}
-                                  className="text-xs py-1.5 px-2.5 text-red-600 border-red-200 hover:bg-red-50"
-                                >
-                                  Rechazar
-                                </Button>
-                                <Button
-                                  variant="primary"
-                                  onClick={() => handleApprove(c.id_comprobante)}
-                                  className="text-xs py-1.5 px-2.5 bg-emerald-600 hover:bg-emerald-700"
-                                >
-                                  {c.estado === 'ERROR' ? 'Reintentar Aprobación' : 'Aprobar Pago'}
-                                </Button>
+                      return (
+                        <tr key={c.id_comprobante} className="hover:bg-slate-50/80 transition">
+                          
+                          {/* Fecha */}
+                          <td className="py-4 px-5 text-xs text-slate-500">
+                            <span className="font-semibold text-slate-800 block">
+                              {new Date(c.created_at).toLocaleDateString()}
+                            </span>
+                            <span>{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </td>
+
+                          {/* Prospecto y Curso */}
+                          <td className="py-4 px-5">
+                            <Link
+                              href={`/leads/${c.lead?.id_lead}`}
+                              className="font-bold text-slate-900 hover:text-blue-600 block text-base"
+                            >
+                              {c.lead?.nombre}
+                            </Link>
+                            {c.interes ? (
+                              <div className="flex items-center gap-1.5 text-xs text-blue-700 font-semibold mt-1">
+                                <GraduationCap size={13} className="shrink-0" />
+                                <span className="truncate max-w-xs">{c.interes.nombre_snapshot}</span>
                               </div>
                             ) : (
-                              <span className="text-xs text-amber-600 font-medium">
-                                {c.estado === 'ERROR' ? 'Matrícula con error' : 'Esperando revisión de Administración'}
-                              </span>
-                            )
-                          ) : (
-                            <span className="text-xs text-gray-400">Revisado</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                              <span className="text-xs text-slate-400 block mt-0.5">Interés general</span>
+                            )}
+                            <span className="text-[11px] text-slate-400 block mt-0.5">
+                              Asesor: {c.subido_por?.nombre_completo || 'Bolsa Común'}
+                            </span>
+                          </td>
+
+                          {/* Monto y Método */}
+                          <td className="py-4 px-5">
+                            <span className="font-extrabold text-base text-slate-900 block">
+                              {c.monto ? `Bs. ${Number(c.monto).toFixed(2)}` : 'Monto no declarado'}
+                            </span>
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                              {c.metodo_pago && (
+                                <span className="font-semibold px-2 py-0.5 bg-slate-100 rounded text-slate-700">
+                                  {c.metodo_pago}
+                                </span>
+                              )}
+                              {c.referencia_transaccion && (
+                                <span className="font-mono text-slate-500">
+                                  Ref: {c.referencia_transaccion}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Archivo Comprobante */}
+                          <td className="py-4 px-5">
+                            <div className="flex items-center gap-3">
+                              {c.tipo_archivo === 'imagen' ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPreview(c)}
+                                  className="w-12 h-12 shrink-0 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 hover:ring-2 hover:ring-blue-500 transition cursor-pointer relative group"
+                                  title="Ver comprobante"
+                                >
+                                  <img
+                                    src={c.archivo_url}
+                                    alt="Comprobante"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                    <Eye size={16} className="text-white" />
+                                  </div>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPreview(c)}
+                                  className="w-12 h-12 shrink-0 rounded-xl border border-red-200 bg-red-50 flex items-center justify-center text-red-600 hover:bg-red-100 transition cursor-pointer"
+                                  title="Ver PDF"
+                                >
+                                  <FileText size={22} />
+                                </button>
+                              )}
+
+                              <div className="flex flex-col text-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPreview(c)}
+                                  className="font-semibold text-blue-600 hover:underline inline-flex items-center gap-1 text-left cursor-pointer"
+                                >
+                                  <Eye size={13} />
+                                  <span>Visualizar</span>
+                                </button>
+                                <a
+                                  href={c.archivo_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[11px] text-slate-400 hover:text-slate-700 inline-flex items-center gap-1 mt-0.5"
+                                >
+                                  <span>Abrir</span>
+                                  <ExternalLink size={10} />
+                                </a>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Estado */}
+                          <td className="py-4 px-5 text-center">
+                            {getStatusBadge(c.estado)}
+
+                            {c.comentario_rechazo && (
+                              <p className="text-xs text-rose-600 mt-1 max-w-xs mx-auto text-left leading-relaxed">
+                                {c.comentario_rechazo}
+                              </p>
+                            )}
+
+                            {c.envio_matricula && (
+                              <div className="mt-2 text-xs">
+                                {c.envio_matricula.estado === 'ENVIADO' ? (
+                                  <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">
+                                    <CheckCircle2 size={12} />
+                                    <span>Matriculado en Proyecto 2</span>
+                                  </span>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center gap-1 text-rose-700 bg-rose-50 px-2 py-0.5 rounded font-medium">
+                                      <AlertCircle size={12} />
+                                      <span>Error en Proyecto 2</span>
+                                    </span>
+                                    {isAdmin && (
+                                      <button
+                                        type="button"
+                                        onClick={() => router.post(`/pagos/envios/${c.envio_matricula.id_envio}/reintentar`, {}, { preserveScroll: true })}
+                                        className="text-[11px] text-blue-600 hover:underline font-semibold block mx-auto cursor-pointer"
+                                      >
+                                        ↻ Reintentar matrícula
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Acciones */}
+                          <td className="py-4 px-5 text-right">
+                            {c.estado === 'PENDIENTE' || c.estado === 'ERROR' ? (
+                              isAdmin ? (
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="secondary"
+                                    onClick={() => openRejectModal(c)}
+                                    disabled={isApproving}
+                                    className="text-xs py-2 px-3 text-rose-600 border border-rose-200 hover:bg-rose-50 rounded-xl"
+                                  >
+                                    Rechazar
+                                  </Button>
+
+                                  <Button
+                                    variant="primary"
+                                    onClick={() => handleApprove(c.id_comprobante)}
+                                    disabled={isApproving}
+                                    className="text-xs py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-xs cursor-pointer"
+                                  >
+                                    {isApproving ? (
+                                      <>
+                                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        <span>Matriculando...</span>
+                                      </>
+                                    ) : (
+                                      <span>{c.estado === 'ERROR' ? 'Reintentar Aprobación' : 'Aprobar Pago'}</span>
+                                    )}
+                                  </Button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-amber-600 font-medium">
+                                  Esperando revisión de Administración
+                                </span>
+                              )
+                            ) : (
+                              <span className="text-xs text-slate-400 font-medium">Revisado</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-xs text-[var(--text-muted)]">
-                        No hay comprobantes de pago en la cola de revisión.
+                      <td colSpan={6} className="py-12 text-center text-sm text-slate-400">
+                        No hay comprobantes pendientes en la cola de revisión.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
         )}
+
       </div>
 
-      {/* Modal para Subir Comprobante Enriquecido */}
+      {/* Modal Rechazar Comprobante */}
+      <Modal
+        isOpen={rejectModalOpen}
+        onClose={() => !rejectProcessing && setRejectModalOpen(false)}
+        title="Rechazar Comprobante de Pago"
+      >
+        <form onSubmit={handleRejectSubmit} className="space-y-4">
+          <p className="text-xs text-slate-600">
+            Ingresa la justificación de rechazo. El prospecto y el asesor podrán ver el motivo para corregir el comprobante.
+          </p>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Motivo de Rechazo <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Ej. Imagen borrosa, el monto no coincide con el depósito bancario..."
+              value={motivoRechazo}
+              onChange={(e) => setMotivoRechazo(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-red-500"
+              required
+            />
+          </div>
+
+          <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setRejectModalOpen(false)}
+              disabled={rejectProcessing}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={rejectProcessing || !motivoRechazo.trim()}
+              className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl"
+            >
+              {rejectProcessing ? 'Rechazando...' : 'Confirmar Rechazo'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Preview de Comprobante */}
+      <Modal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        title={`Comprobante: ${previewComprobante?.lead?.nombre || 'Prospecto'}`}
+      >
+        <div className="space-y-4">
+          {previewComprobante?.tipo_archivo === 'imagen' ? (
+            <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center p-2">
+              <img
+                src={previewComprobante.archivo_url}
+                alt="Comprobante"
+                className="max-w-full h-auto object-contain rounded-lg"
+              />
+            </div>
+          ) : (
+            <div className="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+              <FileText size={48} className="text-red-500 mx-auto" />
+              <p className="text-sm font-semibold text-slate-700">Documento PDF</p>
+              <a
+                href={previewComprobante?.archivo_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700"
+              >
+                <span>Abrir PDF en pestaña nueva</span>
+                <ExternalLink size={13} />
+              </a>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <Button variant="ghost" onClick={() => setPreviewModalOpen(false)}>
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Subir Comprobante */}
       {selectedLeadForUpload && (
         <PaymentUploadModal
           isOpen={uploadModalOpen}
@@ -512,159 +673,10 @@ export default function ReviewQueue({
           }}
           lead={selectedLeadForUpload}
           catalogo={catalogo}
-        />
-      )}
-
-      {/* Modal para Rechazo de Comprobante (Administrador) */}
-      <Modal
-        isOpen={rejectModalOpen}
-        onClose={() => setRejectModalOpen(false)}
-        title="Rechazar Comprobante de Pago"
-      >
-        <form onSubmit={handleRejectSubmit} className="space-y-4">
-          <p className="text-xs text-[var(--text-muted)]">
-            Indica la justificación por la cual el comprobante no es válido (ej. monto insuficiente, imagen ilegible, cuenta errónea).
-          </p>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
-              Motivo del Rechazo <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              rows={3}
-              placeholder="Ej. El número de transacción no coincide con el extracto bancario..."
-              value={motivoRechazo}
-              onChange={(e) => setMotivoRechazo(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-red-500"
-              required
-            />
-          </div>
-
-          <div className="pt-3 border-t border-[var(--border-color-light)] flex justify-end gap-2">
-            <Button variant="ghost" type="button" onClick={() => setRejectModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" variant="danger" disabled={rejectProcessing}>
-              {rejectProcessing ? 'Rechazando...' : 'Confirmar Rechazo'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal para Visualizar Comprobante de Pago en Alta Resolución */}
-      {previewComprobante && (
-        <Modal
-          isOpen={previewModalOpen}
-          onClose={() => {
-            setPreviewModalOpen(false);
-            setPreviewComprobante(null);
+          onSuccess={() => {
+            router.reload({ preserveScroll: true });
           }}
-          title={`Comprobante de Pago - ${previewComprobante.lead?.nombre || 'Prospecto'}`}
-        >
-          <div className="space-y-4">
-            {/* Resumen Informativo */}
-            <div className="p-3 bg-gray-50 rounded-[var(--radius-md)] border border-[var(--border-color-light)] grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-              <div>
-                <span className="text-[var(--text-muted)] block">Monto Declarado:</span>
-                <span className="text-sm font-bold text-emerald-700">
-                  {previewComprobante.monto ? `Bs. ${previewComprobante.monto}` : 'No declarado'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[var(--text-muted)] block">Subido por:</span>
-                <span className="font-medium text-[var(--text-heading)]">
-                  {previewComprobante.subido_por?.nombre_completo || 'Asesor'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[var(--text-muted)] block">Fecha de Envío:</span>
-                <span className="font-medium text-[var(--text-heading)]">
-                  {new Date(previewComprobante.created_at).toLocaleDateString()}
-                </span>
-              </div>
-              <div>
-                <span className="text-[var(--text-muted)] block">Estado:</span>
-                <div>{getStatusBadge(previewComprobante.estado)}</div>
-              </div>
-            </div>
-
-            {/* Visor de Imagen o PDF */}
-            <div className="bg-slate-950/5 p-2 rounded-[var(--radius-md)] border border-gray-200 flex items-center justify-center min-h-[280px] max-h-[60vh] overflow-auto">
-              {previewComprobante.tipo_archivo === 'imagen' ? (
-                <img
-                  src={previewComprobante.archivo_url}
-                  alt={`Comprobante ${previewComprobante.lead?.nombre}`}
-                  className="max-h-[55vh] max-w-full rounded object-contain shadow-sm"
-                />
-              ) : (
-                <div className="w-full py-12 flex flex-col items-center justify-center text-center">
-                  <FileText size={48} className="text-red-500 mb-2" />
-                  <p className="text-sm font-semibold text-gray-800">Documento en formato PDF</p>
-                  <p className="text-xs text-gray-500 mb-3">Puedes visualizarlo o descargarlo en una ventana independiente.</p>
-                  <a
-                    href={previewComprobante.archivo_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-1.5 px-3 bg-[var(--brand-primary)] text-white text-xs font-semibold rounded-[var(--radius-sm)] inline-flex items-center gap-1.5 hover:opacity-90"
-                  >
-                    <span>Abrir PDF en pestaña nueva</span>
-                    <ExternalLink size={13} />
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Acciones al pie del visor */}
-            <div className="pt-3 border-t border-[var(--border-color-light)] flex flex-wrap items-center justify-between gap-2">
-              <a
-                href={previewComprobante.archivo_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[var(--brand-primary)] hover:underline inline-flex items-center gap-1 font-medium"
-              >
-                <ExternalLink size={13} />
-                <span>Abrir archivo en tamaño original</span>
-              </a>
-
-              <div className="flex items-center gap-2">
-                {(previewComprobante.estado === 'PENDIENTE' || previewComprobante.estado === 'ERROR') && isAdmin && (
-                  <>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        const c = previewComprobante;
-                        setPreviewModalOpen(false);
-                        openRejectModal(c);
-                      }}
-                      className="text-xs py-1.5 px-3 text-red-600 border-red-200 hover:bg-red-50"
-                    >
-                      Rechazar
-                    </Button>
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        const cId = previewComprobante.id_comprobante;
-                        setPreviewModalOpen(false);
-                        handleApprove(cId);
-                      }}
-                      className="text-xs py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700"
-                    >
-                      {previewComprobante.estado === 'ERROR' ? 'Reintentar Aprobación' : 'Aprobar Pago'}
-                    </Button>
-                  </>
-                )}
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setPreviewModalOpen(false)}
-                  className="text-xs"
-                >
-                  Cerrar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Modal>
+        />
       )}
     </AppLayout>
   );
