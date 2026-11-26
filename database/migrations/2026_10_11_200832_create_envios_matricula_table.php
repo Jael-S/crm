@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::create('envios_matricula', function (Blueprint $table) {
             $table->id('id_envio');
             $table->foreignId('id_lead')->constrained('leads', 'id_lead')->cascadeOnDelete();
+            $table->foreignId('id_interes')->nullable()->constrained('lead_interes', 'id_interes')->nullOnDelete();
             $table->foreignId('id_comprobante')->nullable()->constrained('comprobantes_pago', 'id_comprobante')->nullOnDelete();
             $table->jsonb('payload')->nullable();
-            $table->string('estado', 15)->default('PENDIENTE'); // PENDIENTE, ENVIADO, ERROR
+            $table->string('estado', 20)->default('PENDIENTE'); // PENDIENTE, ENVIADO, ERROR
             $table->text('respuesta_api')->nullable();
             $table->integer('intentos')->default(0);
+            $table->timestamp('fecha_envio')->useCurrent();
             $table->timestamps();
         });
     }

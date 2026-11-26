@@ -161,11 +161,8 @@ export default function ReviewQueue({
               <div>
                 <h2 className="text-sm font-bold text-cyan-950 flex items-center gap-1.5">
                   <Clock size={16} className="text-cyan-600" />
-                  <span>Prospectos en Seguimiento de Pago (Etapa 4)</span>
+                  <span>Prospectos en SEGUIMIENTO DE PAGO (Etapa 4)</span>
                 </h2>
-                <p className="text-xs text-cyan-800 mt-0.5">
-                  Prospectos que acordaron inscribirse. Registra aquí su comprobante con el cálculo automático de aranceles y descuentos.
-                </p>
               </div>
             </div>
 
@@ -219,13 +216,33 @@ export default function ReviewQueue({
                           {/* Interés Académico */}
                           <td className="py-3.5 px-4 text-xs">
                             {lead.intereses && lead.intereses.length > 0 ? (
-                              <div className="space-y-1">
+                              <div className="space-y-1.5">
                                 {lead.intereses.map((it, i) => (
-                                  <div key={i} className="flex items-center gap-1.5 text-[var(--text-heading)]">
-                                    <GraduationCap size={13} className="text-[var(--brand-primary)] shrink-0" />
-                                    <span className="font-medium line-clamp-1">
-                                      {it.nombre_snapshot || it.tipo}
-                                    </span>
+                                  <div key={i} className="flex flex-col gap-0.5 text-[var(--text-heading)]">
+                                    <div className="flex items-center gap-1.5">
+                                      <GraduationCap size={13} className="text-[var(--brand-primary)] shrink-0" />
+                                      <span className="font-semibold line-clamp-1">
+                                        {it.nombre_snapshot || it.tipo}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 pl-4">
+                                      <span
+                                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                          it.estado === 'MATRICULADO'
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : it.estado === 'EN_PAGO'
+                                            ? 'bg-amber-100 text-amber-800'
+                                            : 'bg-slate-100 text-slate-700'
+                                        }`}
+                                      >
+                                        {it.estado || 'EN_SEGUIMIENTO'}
+                                      </span>
+                                      {it.monto_pactado && (
+                                        <span className="text-[10px] text-emerald-700 font-semibold">
+                                          Bs. {it.monto_pactado}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -265,11 +282,11 @@ export default function ReviewQueue({
                           </td>
 
                           {/* Acción */}
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-1.5 px-1 text-right">
                             <Button
                               variant="primary"
                               onClick={() => handleOpenUpload(lead)}
-                              className="text-xs py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 inline-flex items-center gap-1.5"
+                              className="text-xs py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 inline-flex items-center"
                             >
                               <UploadCloud size={14} />
                               <span>Subir Comprobante</span>
@@ -323,7 +340,27 @@ export default function ReviewQueue({
                           >
                             {c.lead?.nombre}
                           </Link>
-                          <span className="text-xs text-[var(--text-muted)]">
+                          {c.interes ? (
+                            <div className="flex items-center gap-1 text-xs text-[var(--brand-primary)] font-semibold mt-1">
+                              <GraduationCap size={12} className="shrink-0" />
+                              <span className="truncate max-w-xs">{c.interes.nombre_snapshot}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-gray-400 block mt-0.5">Interés general</span>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)] mt-1">
+                            {c.metodo_pago && (
+                              <span className="font-semibold px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px]">
+                                {c.metodo_pago}
+                              </span>
+                            )}
+                            {c.referencia_transaccion && (
+                              <span className="font-mono text-[10px] text-gray-500">
+                                Ref: {c.referencia_transaccion}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-[var(--text-muted)] block mt-0.5">
                             Subido por: {c.subido_por?.nombre_completo || 'Asesor'}
                           </span>
                         </td>

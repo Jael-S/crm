@@ -19,6 +19,10 @@ return new class extends Migration
             $table->unsignedBigInteger('id_version_externo')->nullable();
             $table->unsignedBigInteger('id_modulo_externo')->nullable();
             $table->string('nombre_snapshot', 150);
+            $table->string('estado', 25)->default('EN_SEGUIMIENTO'); // EN_SEGUIMIENTO, EN_PAGO, MATRICULADO, DESCARTADO
+            $table->decimal('monto_pactado', 10, 2)->nullable();
+            $table->foreignId('id_descuento')->nullable()->constrained('descuentos', 'id_descuento')->nullOnDelete();
+            $table->timestamps();
         });
 
         // Agregamos la regla CHECK de validación en la base de datos PostgreSQL

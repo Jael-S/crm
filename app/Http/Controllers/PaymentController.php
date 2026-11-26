@@ -24,13 +24,19 @@ class PaymentController extends Controller
         $request->validate([
             'comprobante' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
             'monto' => 'nullable|numeric|min:0',
+            'id_interes' => 'nullable|integer|exists:lead_interes,id_interes',
+            'metodo_pago' => 'nullable|string|in:TRANSFERENCIA,QR,TARJETA',
+            'referencia_transaccion' => 'nullable|string|max:100',
         ]);
 
         $this->paymentService->subirComprobante(
             $lead,
             $request->file('comprobante'),
             $request->input('monto') ? (float) $request->input('monto') : null,
-            $request->user()->id_usuario
+            $request->user()->id_usuario,
+            $request->input('id_interes') ? (int) $request->input('id_interes') : null,
+            $request->input('metodo_pago', 'TRANSFERENCIA'),
+            $request->input('referencia_transaccion')
         );
 
         return redirect()->back()->with('success', 'Comprobante de pago subido correctamente.');
@@ -41,7 +47,14 @@ class PaymentController extends Controller
         $user = $request->user();
 
         // 1. Comprobantes subidos (si es vendedor, solo de sus leads)
-        $comprobantesQuery = ComprobantePago::with(['lead.intereses', 'lead.descuento', 'subidoPor', 'revisadoPor', 'envioMatricula'])
+        $comprobantesQuery = ComprobantePago::with([
+            'lead.intereses', 
+            'lead.descuento', 
+            'interes',
+            'subidoPor', 
+            'revisadoPor', 
+            'envioMatricula'
+        ])
             ->orderByRaw("CASE WHEN estado = 'PENDIENTE' THEN 1 ELSE 2 END")
             ->latest('created_at');
 
@@ -88,7 +101,7 @@ class PaymentController extends Controller
 
     public function retryEnrollment(int $id, \App\Services\EnrollmentService $enrollmentService): RedirectResponse
     {
-        $envio = \App\Models\EnvioMatricula::with(['comprobante.lead'])->findOrFail($id);
+        $envio = \App\Models\EnvioMatricula::with(['comprobante.lead', 'interes'])->findOrFail($id);
         $enrollmentService->reintentar($envio);
 
         if ($envio->estado === 'ENVIADO') {
@@ -100,22 +113,29 @@ class PaymentController extends Controller
                     'comentario_rechazo' => null,
                 ]);
 
+                if ($envio->interes) {
+                    $envio->interes->update(['estado' => 'MATRICULADO']);
+                }
+
                 $lead = $comprobante->lead;
-                if ($lead && $lead->id_etapa !== 5) {
-                    $etapaAnterior = $lead->id_etapa;
-                    $lead->update(['id_etapa' => 5]);
-                    \App\Services\BitacoraService::registrar(
-                        $lead->id_lead,
-                        'CAMBIO_ESTADO',
-                        "Prospecto convertido automáticamente a Alumno tras confirmación exitosa de matrícula en Proyecto 2",
-                        auth()->id(),
-                        $etapaAnterior,
-                        5
-                    );
+                if ($lead) {
+                    $interesesPendientes = $lead->intereses()->where('estado', '!=', 'MATRICULADO')->count();
+                    if ($interesesPendientes === 0 && $lead->id_etapa !== 5) {
+                        $etapaAnterior = $lead->id_etapa;
+                        $lead->update(['id_etapa' => 5]);
+                        \App\Services\BitacoraService::registrar(
+                            $lead->id_lead,
+                            'CAMBIO_ESTADO',
+                            "Prospecto convertido automáticamente a Alumno tras confirmación exitosa de matrícula en Proyecto 2",
+                            auth()->id(),
+                            $etapaAnterior,
+                            5
+                        );
+                    }
                 }
             }
 
-            return redirect()->back()->with('success', '¡Matrícula confirmada exitosamente por el Proyecto 2! El comprobante ha sido APROBADO y el prospecto CONVERTIDO a Alumno.');
+            return redirect()->back()->with('success', '¡Matrícula confirmada exitosamente por el Proyecto 2! El comprobante ha sido APROBADO.');
         }
 
         return redirect()->back()->with('warning', 'Reintento procesado, pero la API del Proyecto 2 aún responde con error: ' . $envio->respuesta_api);

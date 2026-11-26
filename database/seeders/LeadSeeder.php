@@ -3,75 +3,122 @@
 namespace Database\Seeders;
 
 use App\Models\AsignacionLead;
+use App\Models\ComprobantePago;
+use App\Models\EnvioMatricula;
 use App\Models\Lead;
+use App\Models\LeadInteres;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class LeadSeeder extends Seeder
 {
     /**
-     * Run the database seeds for testing Leads, Bolsa Común & 6-Stage Pipeline.
+     * Run the database seeds for testing Leads, Bolsa Común, Multi-Intereses & Pipeline.
      */
     public function run(): void
     {
         // Limpiar para pruebas
+        DB::table('envios_matricula')->delete();
+        DB::table('comprobantes_pago')->delete();
+        DB::table('lead_interes')->delete();
         DB::table('asignaciones_lead')->delete();
         DB::table('leads')->delete();
 
         // 1. Prospectos de demostración en Bolsa Común (sin vendedor, Etapa 1: Nuevo)
-        $bolsaComun = [
-            [
-                'nombre' => 'María Laura Rojas',
-                'telefono' => '71029384',
-                'correo' => 'marialaura@gmail.com',
-                'id_origen' => 1, // Facebook
-                'id_etapa' => 1,  // Nuevo
-                'id_vendedor' => null,
-                'id_profesion' => 1,
-                'created_by' => 1, // Admin Nataly
-                'created_at' => now()->subHours(5),
-                'updated_at' => now()->subHours(5),
-            ],
-            [
-                'nombre' => 'Roberto Gómez Bolaños',
-                'telefono' => '76543210',
-                'correo' => 'roberto.gomez@hotmail.com',
-                'id_origen' => 2, // WhatsApp
-                'id_etapa' => 1,  // Nuevo
-                'id_vendedor' => null,
-                'id_profesion' => 2,
-                'created_by' => 2, // Coordinador Jael
-                'created_at' => now()->subHours(3),
-                'updated_at' => now()->subHours(3),
-            ],
-            [
-                'nombre' => 'Fernanda Aguilera',
-                'telefono' => '78901234',
-                'correo' => 'fer.aguilera@outlook.com',
-                'id_origen' => 3, // Web
-                'id_etapa' => 1,  // Nuevo
-                'id_vendedor' => null,
-                'id_profesion' => 3,
-                'created_by' => 1,
-                'created_at' => now()->subHours(2),
-                'updated_at' => now()->subHours(2),
-            ],
-            [
-                'nombre' => 'Jorge Suárez Vaca',
-                'telefono' => '70099881',
-                'correo' => 'jorge.suarez@gmail.com',
-                'id_origen' => 4, // Referido
-                'id_etapa' => 1,  // Nuevo
-                'id_vendedor' => null,
-                'created_by' => 1,
-                'created_at' => now()->subHour(),
-                'updated_at' => now()->subHour(),
-            ],
-        ];
+        // Lead 1: María Laura Rojas (con MÚLTIPLES INTERESES: IAA y MKD)
+        $lead1 = Lead::create([
+            'nombre' => 'María Laura Rojas',
+            'telefono' => '71029384',
+            'correo' => 'marialaura@gmail.com',
+            'id_origen' => 1, // Facebook
+            'id_etapa' => 1,  // Nuevo
+            'id_vendedor' => null,
+            'id_profesion' => 1,
+            'created_by' => 1, // Admin Nataly
+            'created_at' => now()->subHours(5),
+            'updated_at' => now()->subHours(5),
+        ]);
 
-        foreach ($bolsaComun as $data) {
-            Lead::create($data);
-        }
+        LeadInteres::create([
+            'id_lead' => $lead1->id_lead,
+            'tipo' => 'PROGRAMA',
+            'id_version_externo' => 1,
+            'id_modulo_externo' => null,
+            'nombre_snapshot' => 'Diplomado en Inteligencia Artificial Aplicada - Versión 1',
+            'estado' => 'EN_SEGUIMIENTO',
+            'monto_pactado' => 1800.00,
+        ]);
+
+        LeadInteres::create([
+            'id_lead' => $lead1->id_lead,
+            'tipo' => 'PROGRAMA',
+            'id_version_externo' => 2,
+            'id_modulo_externo' => null,
+            'nombre_snapshot' => 'Diplomado en Marketing Digital y Analítica - Versión 1',
+            'estado' => 'EN_SEGUIMIENTO',
+            'monto_pactado' => 1500.00,
+        ]);
+
+        // Lead 2: Roberto Gómez Bolaños
+        $lead2 = Lead::create([
+            'nombre' => 'Roberto Gómez Bolaños',
+            'telefono' => '76543210',
+            'correo' => 'roberto.gomez@hotmail.com',
+            'id_origen' => 2, // WhatsApp
+            'id_etapa' => 1,  // Nuevo
+            'id_vendedor' => null,
+            'id_profesion' => 2,
+            'created_by' => 2,
+            'created_at' => now()->subHours(3),
+            'updated_at' => now()->subHours(3),
+        ]);
+
+        LeadInteres::create([
+            'id_lead' => $lead2->id_lead,
+            'tipo' => 'MODULO',
+            'id_version_externo' => null,
+            'id_modulo_externo' => 2,
+            'nombre_snapshot' => 'Python para IA - Módulo 2',
+            'estado' => 'EN_SEGUIMIENTO',
+            'monto_pactado' => 700.00,
+        ]);
+
+        // Lead 3: Fernanda Aguilera
+        $lead3 = Lead::create([
+            'nombre' => 'Fernanda Aguilera',
+            'telefono' => '78901234',
+            'correo' => 'fer.aguilera@outlook.com',
+            'id_origen' => 3, // Web
+            'id_etapa' => 1,  // Nuevo
+            'id_vendedor' => null,
+            'id_profesion' => 3,
+            'created_by' => 1,
+            'created_at' => now()->subHours(2),
+            'updated_at' => now()->subHours(2),
+        ]);
+
+        LeadInteres::create([
+            'id_lead' => $lead3->id_lead,
+            'tipo' => 'PROGRAMA',
+            'id_version_externo' => 1,
+            'id_modulo_externo' => null,
+            'nombre_snapshot' => 'Diplomado en Inteligencia Artificial Aplicada - Versión 1',
+            'estado' => 'EN_SEGUIMIENTO',
+            'monto_pactado' => 1800.00,
+        ]);
+
+        // Lead 4: Jorge Suárez Vaca
+        Lead::create([
+            'nombre' => 'Jorge Suárez Vaca',
+            'telefono' => '70099881',
+            'correo' => 'jorge.suarez@gmail.com',
+            'id_origen' => 4, // Referido
+            'id_etapa' => 1,  // Nuevo
+            'id_vendedor' => null,
+            'created_by' => 1,
+            'created_at' => now()->subHour(),
+            'updated_at' => now()->subHour(),
+        ]);
 
         // 2. Prospecto en Etapa 2: En Contacto (Asignado a Nicol Flores, id_usuario = 3)
         $leadContacto = Lead::create([
@@ -87,6 +134,16 @@ class LeadSeeder extends Seeder
             'created_by' => 1,
             'created_at' => now()->subDays(3),
             'updated_at' => now()->subDays(2),
+        ]);
+
+        LeadInteres::create([
+            'id_lead' => $leadContacto->id_lead,
+            'tipo' => 'MODULO',
+            'id_version_externo' => null,
+            'id_modulo_externo' => 1,
+            'nombre_snapshot' => 'Fundamentos de Inteligencia Artificial - Módulo 1',
+            'estado' => 'EN_SEGUIMIENTO',
+            'monto_pactado' => 650.00,
         ]);
 
         AsignacionLead::create([
@@ -112,6 +169,16 @@ class LeadSeeder extends Seeder
             'created_by' => 1,
             'created_at' => now()->subDays(4),
             'updated_at' => now()->subDays(1),
+        ]);
+
+        LeadInteres::create([
+            'id_lead' => $leadSeguimiento->id_lead,
+            'tipo' => 'MODULO',
+            'id_version_externo' => null,
+            'id_modulo_externo' => 3,
+            'nombre_snapshot' => 'Machine Learning - Módulo 3',
+            'estado' => 'EN_SEGUIMIENTO',
+            'monto_pactado' => 850.00,
         ]);
 
         AsignacionLead::create([
@@ -140,6 +207,16 @@ class LeadSeeder extends Seeder
             'updated_at' => now()->subHours(8),
         ]);
 
+        LeadInteres::create([
+            'id_lead' => $leadPromesa->id_lead,
+            'tipo' => 'PROGRAMA',
+            'id_version_externo' => 1,
+            'id_modulo_externo' => null,
+            'nombre_snapshot' => 'Diplomado en Inteligencia Artificial Aplicada - Versión 1',
+            'estado' => 'EN_PAGO',
+            'monto_pactado' => 1530.00,
+        ]);
+
         AsignacionLead::create([
             'id_lead' => $leadPromesa->id_lead,
             'id_vendedor_anterior' => null,
@@ -150,7 +227,7 @@ class LeadSeeder extends Seeder
             'created_at' => now()->subDays(3),
         ]);
 
-        // 5. Prospecto en Etapa 5: Convertido (Asignado a Carlos Mendoza, id_usuario = 4, con datos completos de alumno RF3.4)
+        // 5. Prospecto en Etapa 5: Convertido (Mateo Benítez Vargas - Alumno con Matrícula Formalizada)
         $leadConvertido = Lead::create([
             'nombre' => 'Mateo Benítez Vargas',
             'telefono' => '78234567',
@@ -170,6 +247,48 @@ class LeadSeeder extends Seeder
             'updated_at' => now()->subHours(4),
         ]);
 
+        $interesConvertido = LeadInteres::create([
+            'id_lead' => $leadConvertido->id_lead,
+            'tipo' => 'PROGRAMA',
+            'id_version_externo' => 1,
+            'id_modulo_externo' => null,
+            'nombre_snapshot' => 'Diplomado en Inteligencia Artificial Aplicada - Versión 1',
+            'estado' => 'MATRICULADO',
+            'monto_pactado' => 1440.00,
+        ]);
+
+        $comprobante = ComprobantePago::create([
+            'id_lead' => $leadConvertido->id_lead,
+            'id_interes' => $interesConvertido->id_interes,
+            'subido_por' => 4,
+            'revisado_por' => 1,
+            'archivo_url' => '/storage/comprobantes/demo_voucher_mateo.png',
+            'tipo_archivo' => 'imagen',
+            'monto' => 1440.00,
+            'metodo_pago' => 'TRANSFERENCIA',
+            'referencia_transaccion' => 'BNB-TR-889922',
+            'estado' => 'APROBADO',
+            'fecha_revision' => now()->subHours(4),
+        ]);
+
+        EnvioMatricula::create([
+            'id_lead' => $leadConvertido->id_lead,
+            'id_interes' => $interesConvertido->id_interes,
+            'id_comprobante' => $comprobante->id_comprobante,
+            'payload' => [
+                'crm_lead_id' => 'LEAD-' . $leadConvertido->id_lead,
+                'documento' => '6987412',
+                'name' => 'Mateo',
+                'apellidos' => 'Benítez Vargas',
+                'tipo' => 'cohorte',
+                'cohorte_id' => 1,
+            ],
+            'estado' => 'ENVIADO',
+            'respuesta_api' => '{"usuario":{"id":40,"documento":"6987412","nombre":"Mateo Benítez Vargas"},"matriculas":[{"id":105,"estado":"activa"}]}',
+            'intentos' => 1,
+            'fecha_envio' => now()->subHours(4),
+        ]);
+
         AsignacionLead::create([
             'id_lead' => $leadConvertido->id_lead,
             'id_vendedor_anterior' => null,
@@ -180,7 +299,7 @@ class LeadSeeder extends Seeder
             'created_at' => now()->subDays(4),
         ]);
 
-        // 6. Prospecto en Etapa 6: Perdido (Asignado a Nicol Flores, id_usuario = 3, con motivo y comentario RF3.3)
+        // 6. Prospecto en Etapa 6: Perdido
         $leadPerdido = Lead::create([
             'nombre' => 'Daniela Castro Soliz',
             'telefono' => '70345678',
@@ -210,6 +329,9 @@ class LeadSeeder extends Seeder
         // Secuencias de PostgreSQL
         if (DB::getDriverName() === 'pgsql') {
             DB::statement("SELECT setval(pg_get_serial_sequence('leads', 'id_lead'), coalesce(max(id_lead), 1)) FROM leads;");
+            DB::statement("SELECT setval(pg_get_serial_sequence('lead_interes', 'id_interes'), coalesce(max(id_interes), 1)) FROM lead_interes;");
+            DB::statement("SELECT setval(pg_get_serial_sequence('comprobantes_pago', 'id_comprobante'), coalesce(max(id_comprobante), 1)) FROM comprobantes_pago;");
+            DB::statement("SELECT setval(pg_get_serial_sequence('envios_matricula', 'id_envio'), coalesce(max(id_envio), 1)) FROM envios_matricula;");
             DB::statement("SELECT setval(pg_get_serial_sequence('asignaciones_lead', 'id_asignacion'), coalesce(max(id_asignacion), 1)) FROM asignaciones_lead;");
         }
     }

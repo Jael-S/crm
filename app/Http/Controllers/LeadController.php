@@ -6,6 +6,7 @@ use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
 use App\Models\EtapaPipeline;
 use App\Models\Lead;
+use App\Models\LeadInteres;
 use App\Models\OrigenLead;
 use App\Models\Profesion;
 use App\Models\Descuento;
@@ -86,7 +87,7 @@ class LeadController extends Controller
     }
 
     /**
-     * Ver ficha detallada del prospecto.
+     * Ver ficha detallada del prospecto con detección de Ex-Alumno y Múltiples Intereses.
      */
     public function show(Request $request, int $id): Response
     {
@@ -103,9 +104,11 @@ class LeadController extends Controller
             ->orderBy('nombre_completo')
             ->get(['id_usuario', 'nombre_completo']);
 
+        $exAlumnoInfo = $this->obtenerInfoExAlumno($lead);
+
         return Inertia::render('Leads/Show', [
             'lead' => $lead->load([
-                'intereses',
+                'intereses.descuento',
                 'profesion',
                 'descuento',
                 'bitacoras.usuario',
@@ -114,12 +117,63 @@ class LeadController extends Controller
                 'recordatorios.usuario',
                 'comprobantes.subidoPor',
                 'comprobantes.revisadoPor',
+                'comprobantes.interes',
                 'comprobantes.envioMatricula',
-                'enviosMatricula',
+                'enviosMatricula.interes',
             ]),
             'vendedores' => $vendedores,
             'catalogo' => $this->catalogService->getCatalogCompleto(),
+            'ex_alumno_info' => $exAlumnoInfo,
         ]);
+    }
+
+    /**
+     * Detección de Ex-Alumno y Reingresos (buscar por CI o Correo en otros leads con cursos MATRICULADOS).
+     */
+    public function obtenerInfoExAlumno(Lead $lead): array
+    {
+        $historialPrevio = LeadInteres::where('id_lead', '!=', $lead->id_lead)
+            ->where('estado', 'MATRICULADO')
+            ->whereHas('lead', function ($q) use ($lead) {
+                $q->where(function ($sub) use ($lead) {
+                    if (!empty($lead->ci)) {
+                        $sub->where('ci', $lead->ci);
+                    }
+                    if (!empty($lead->correo)) {
+                        $sub->orWhere('correo', $lead->correo);
+                    }
+                });
+            })
+            ->with('lead')
+            ->get();
+
+        $descuentoFidelidad = Descuento::where('activo', true)
+            ->where(function ($q) {
+                $q->where('nombre', 'ilike', '%fidelidad%')
+                  ->orWhere('nombre', 'ilike', '%ex-alumno%')
+                  ->orWhere('nombre', 'ilike', '%exalumno%')
+                  ->orWhere('nombre', 'ilike', '%convenio%');
+            })
+            ->first();
+
+        return [
+            'es_ex_alumno' => $historialPrevio->isNotEmpty(),
+            'total_cursos_concluidos' => $historialPrevio->count(),
+            'cursos_previos' => $historialPrevio->map(fn ($i) => [
+                'id_interes' => $i->id_interes,
+                'nombre' => $i->nombre_snapshot,
+                'curso' => $i->nombre_snapshot,
+                'tipo' => $i->tipo,
+                'lead_id' => $i->id_lead,
+                'fecha_matricula' => $i->updated_at?->format('d/m/Y') ?? 'Anterior',
+            ])->toArray(),
+            'descuento_sugerido' => $descuentoFidelidad ? [
+                'id_descuento' => $descuentoFidelidad->id_descuento,
+                'nombre' => $descuentoFidelidad->nombre,
+                'porcentaje' => $descuentoFidelidad->porcentaje,
+                'monto_fijo' => $descuentoFidelidad->monto_fijo,
+            ] : null,
+        ];
     }
 
     /**
