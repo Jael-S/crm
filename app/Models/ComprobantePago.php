@@ -13,10 +13,13 @@ class ComprobantePago extends Model
 
     protected $fillable = [
         'id_lead',
+        'id_interes',
         'subido_por',
         'archivo_url',
         'tipo_archivo',
         'monto',
+        'metodo_pago',
+        'referencia_transaccion',
         'estado',
         'revisado_por',
         'fecha_revision',
@@ -34,6 +37,11 @@ class ComprobantePago extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class, 'id_lead', 'id_lead');
+    }
+
+    public function interes(): BelongsTo
+    {
+        return $this->belongsTo(LeadInteres::class, 'id_interes', 'id_interes');
     }
 
     public function subidoPor(): BelongsTo

@@ -30,10 +30,12 @@ import {
   Bell,
   CheckCircle2,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  GraduationCap,
+  Layers
 } from 'lucide-react';
 
-export default function LeadsShow({ lead, vendedores = [], catalogo = { programas: [], modulos_sueltos: [] } }) {
+export default function LeadsShow({ lead, vendedores = [], catalogo = { programas: [], modulos_sueltos: [] }, ex_alumno_info = null }) {
   const { auth } = usePage().props;
   const user = auth?.user;
   const canAssign = user?.rol?.nombre === 'Administrador' || user?.rol?.nombre === 'Coordinador';
@@ -109,11 +111,18 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
   };
 
   const interestOptions = interestType === 'PROGRAMA'
-    ? catalogo.programas.flatMap((programa) => (programa.versiones || []).map((version) => ({
+    ? (catalogo.programas || []).flatMap((programa) => (programa.versiones || []).map((version) => ({
         id: version.id,
         nombre: `${programa.nombre} - ${version.nombre}`,
       })))
-    : catalogo.modulos_sueltos.map((modulo) => ({ id: modulo.id, nombre: modulo.nombre }));
+    : (catalogo.modulos_sueltos || []).flatMap((modulo) =>
+        modulo.grupos && modulo.grupos.length > 0
+          ? modulo.grupos.map((g) => ({
+              id: g.id,
+              nombre: `${modulo.nombre} - ${g.nombre}`,
+            }))
+          : [{ id: modulo.id, nombre: modulo.nombre }]
+      );
 
   const handleInterestTypeChange = (type) => {
     setInterestType(type);
@@ -250,6 +259,41 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
                 <p className="text-xs text-rose-700 mt-0.5">
                   Este prospecto fue marcado como no viable para continuar en el proceso comercial.
                 </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Banner de Ex-Alumno Detectado (Reingreso / Fidelidad) */}
+        {ex_alumno_info?.es_ex_alumno && (
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-[var(--radius-lg)] text-blue-900 shadow-xs flex items-start gap-3 animate-in fade-in duration-200">
+            <div className="p-2 bg-blue-100 rounded-full text-blue-700 shrink-0">
+              <GraduationCap size={22} />
+            </div>
+            <div className="flex-1 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-bold text-blue-900">¡Prospecto Reconocido como Ex-Alumno de UNEXO!</h3>
+                <span className="text-xs bg-blue-200 text-blue-900 font-semibold px-2.5 py-0.5 rounded-full">
+                  {ex_alumno_info.total_cursos_concluidos} curso(s) completado(s)
+                </span>
+                {ex_alumno_info.descuento_sugerido && (
+                  <span className="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full">
+                    Aplica {ex_alumno_info.descuento_sugerido.nombre}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-blue-700 mt-1">
+                El sistema detectó historial académico formalizado para este número de CI / correo. Se sugiere otorgar el beneficio de fidelidad.
+              </p>
+              {ex_alumno_info.cursos_previos?.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {ex_alumno_info.cursos_previos.map((c, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 text-[11px] bg-white text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-medium">
+                      <CheckCircle2 size={12} className="text-emerald-500" />
+                      {c.nombre} ({c.fecha_matricula})
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -398,22 +442,47 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
                       key={interes.id_interes}
                       className="flex items-center justify-between gap-3 p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)] border border-[var(--border-color-light)]"
                     >
-                      <div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                          {interes.tipo}
-                        </span>
-                        <p className="text-sm font-semibold text-[var(--text-heading)] mt-1">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                            {interes.tipo}
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                              interes.estado === 'MATRICULADO'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : interes.estado === 'EN_PAGO'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {interes.estado || 'EN_SEGUIMIENTO'}
+                          </span>
+                          {interes.monto_pactado && (
+                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                              Bs. {interes.monto_pactado}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-semibold text-[var(--text-heading)]">
                           {interes.nombre_snapshot}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeInterest(interes.id_interes)}
-                        className="text-rose-600 hover:text-rose-800 p-1 rounded hover:bg-rose-50 transition"
-                        title="Eliminar interés"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {interes.estado !== 'MATRICULADO' ? (
+                        <button
+                          type="button"
+                          onClick={() => removeInterest(interes.id_interes)}
+                          className="text-rose-600 hover:text-rose-800 p-1 rounded hover:bg-rose-50 transition cursor-pointer"
+                          title="Eliminar interés"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      ) : (
+                        <span className="text-emerald-600 text-xs font-semibold flex items-center gap-1" title="Interés ya matriculado en Proyecto 2">
+                          <CheckCircle2 size={16} />
+                          <span>Activo</span>
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -459,14 +528,33 @@ export default function LeadsShow({ lead, vendedores = [], catalogo = { programa
                       className="p-3 bg-[var(--bg-body)] rounded-[var(--radius-sm)] border border-[var(--border-color-light)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                     >
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Badge variant={comp.estado === 'APROBADO' ? 'success' : comp.estado === 'RECHAZADO' ? 'danger' : 'warning'}>
                             {comp.estado}
                           </Badge>
                           <span className="text-sm font-bold text-[var(--text-heading)]">
                             {comp.monto ? `Bs. ${comp.monto}` : 'Monto no declarado'}
                           </span>
+                          {comp.metodo_pago && (
+                            <span className="text-[10px] font-semibold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                              {comp.metodo_pago}
+                            </span>
+                          )}
                         </div>
+
+                        {comp.interes && (
+                          <div className="flex items-center gap-1.5 text-xs text-[var(--brand-primary)] font-semibold mt-1">
+                            <GraduationCap size={13} />
+                            <span>Interés: {comp.interes.nombre_snapshot}</span>
+                          </div>
+                        )}
+
+                        {comp.referencia_transaccion && (
+                          <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                            Ref: {comp.referencia_transaccion}
+                          </p>
+                        )}
+
                         <p className="text-xs text-[var(--text-muted)] mt-1">
                           Subido por: {comp.subido_por?.nombre_completo || 'Asesor'} el {new Date(comp.created_at).toLocaleString()}
                         </p>

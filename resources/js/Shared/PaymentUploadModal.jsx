@@ -12,7 +12,9 @@ import {
   FileText,
   User,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Layers,
+  CreditCard
 } from 'lucide-react';
 
 export default function PaymentUploadModal({
@@ -24,12 +26,20 @@ export default function PaymentUploadModal({
 }) {
   const [file, setFile] = useState(null);
   const [monto, setMonto] = useState('');
+  const [selectedInterestId, setSelectedInterestId] = useState('');
+  const [metodoPago, setMetodoPago] = useState('TRANSFERENCIA');
+  const [referenciaTransaccion, setReferenciaTransaccion] = useState('');
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Helper para buscar el precio de un interés individual en el catálogo de API 2
   const findItemPrice = (interes) => {
     if (!interes || !catalogo) return 0;
+
+    // Si el interés ya tiene un monto pactado guardado en BD, usarlo directamente
+    if (interes.monto_pactado && parseFloat(interes.monto_pactado) > 0) {
+      return parseFloat(interes.monto_pactado);
+    }
 
     if (interes.tipo === 'PROGRAMA') {
       const versionId = String(interes.id_version_externo);
@@ -73,7 +83,12 @@ export default function PaymentUploadModal({
       };
     });
 
-    const baseTotal = items.reduce((acc, curr) => acc + curr.precio, 0);
+    // Si el usuario seleccionó un interés específico, calcular solo sobre ese interés
+    const activeItems = selectedInterestId
+      ? items.filter((it) => String(it.id_interes) === String(selectedInterestId))
+      : items;
+
+    const baseTotal = activeItems.reduce((acc, curr) => acc + curr.precio, 0);
 
     const porcentajeDescuento = lead.descuento ? parseFloat(lead.descuento.porcentaje || 0) : 0;
     const montoDescuento = (baseTotal * porcentajeDescuento) / 100;
@@ -87,20 +102,28 @@ export default function PaymentUploadModal({
       montoDescuento,
       totalNeto,
     };
-  }, [lead, catalogo]);
+  }, [lead, catalogo, selectedInterestId]);
 
-  // Al abrir la modal con un lead, inicializar el campo editable monto con el total sugerido
+  // Al abrir la modal o cambiar el interés, inicializar el campo editable monto
   useEffect(() => {
     if (isOpen && lead) {
       setFile(null);
       setErrors({});
-      if (calculation.totalNeto > 0) {
-        setMonto(calculation.totalNeto.toFixed(2));
-      } else {
-        setMonto('');
+      // Si el lead tiene intereses, por defecto seleccionar el primero que no esté matriculado
+      if (!selectedInterestId && lead.intereses?.length > 0) {
+        const pendiente = lead.intereses.find((i) => i.estado !== 'MATRICULADO') || lead.intereses[0];
+        setSelectedInterestId(String(pendiente.id_interes));
       }
     }
-  }, [isOpen, lead, calculation.totalNeto]);
+  }, [isOpen, lead]);
+
+  useEffect(() => {
+    if (calculation.totalNeto > 0) {
+      setMonto(calculation.totalNeto.toFixed(2));
+    } else {
+      setMonto('');
+    }
+  }, [calculation.totalNeto, selectedInterestId]);
 
   if (!lead) return null;
 
@@ -116,9 +139,10 @@ export default function PaymentUploadModal({
 
     const formData = new FormData();
     formData.append('comprobante', file);
-    if (monto) {
-      formData.append('monto', monto);
-    }
+    if (monto) formData.append('monto', monto);
+    if (selectedInterestId) formData.append('id_interes', selectedInterestId);
+    if (metodoPago) formData.append('metodo_pago', metodoPago);
+    if (referenciaTransaccion) formData.append('referencia_transaccion', referenciaTransaccion);
 
     router.post(`/leads/${lead.id_lead}/comprobantes`, formData, {
       preserveScroll: true,
@@ -161,56 +185,41 @@ export default function PaymentUploadModal({
           )}
         </div>
 
-        {/* Validación: Si no tiene intereses registrados */}
+        {/* Validación de Intereses */}
         {!calculation.hasInterests ? (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-[var(--radius-md)] text-amber-800 text-xs space-y-2">
-            <div className="flex items-center gap-2 font-semibold">
-              <AlertTriangle size={16} className="text-amber-600 shrink-0" />
-              <span>Prospecto sin Interés Académico Registrado</span>
-            </div>
-            <p className="text-[11px] leading-relaxed">
-              El prospecto debe tener vinculado al menos un programa o módulo de interés para calcular los aranceles y validar la matrícula.
-            </p>
-            <div className="pt-1">
-              <a
-                href={`/leads/${lead.id_lead}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-semibold text-[var(--brand-primary)] hover:underline"
-              >
-                <span>Ir al perfil del prospecto para agregar interés</span>
-                <ExternalLink size={12} />
-              </a>
+          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-[var(--radius-sm)] flex items-start gap-2">
+            <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-600" />
+            <div>
+              <p className="font-semibold">Sin programas de interés vinculados</p>
+              <p className="mt-0.5">
+                Para registrar un pago, primero debes vincular al menos un programa o módulo en la ficha del prospecto.
+              </p>
             </div>
           </div>
         ) : (
-          /* Desglose de Precios, Descuentos y Total */
-          <div className="space-y-2.5">
-            <div className="border border-[var(--border-color-light)] rounded-[var(--radius-md)] overflow-hidden">
-              <div className="bg-gray-50/70 px-3 py-2 border-b border-[var(--border-color-light)] flex items-center justify-between">
-                <span className="text-xs font-semibold text-[var(--text-heading)] flex items-center gap-1.5">
-                  <GraduationCap size={15} className="text-[var(--brand-primary)]" />
-                  Interés(es) Académico(s) & Aranceles (API 2)
-                </span>
-                <span className="text-[11px] text-[var(--text-muted)]">Precio Base</span>
-              </div>
-              <div className="p-3 space-y-2 divide-y divide-gray-100">
-                {calculation.items.map((it, idx) => (
-                  <div key={idx} className={`flex items-center justify-between text-xs ${idx > 0 ? 'pt-2' : ''}`}>
-                    <div>
-                      <span className="font-medium text-[var(--text-heading)] block">
-                        {it.nombre_snapshot || (it.tipo === 'PROGRAMA' ? 'Programa Académico' : 'Módulo')}
-                      </span>
-                      <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
-                        {it.tipo}
-                      </span>
-                    </div>
-                    <span className="font-semibold text-[var(--text-heading)]">
-                      {it.precio > 0 ? `Bs. ${it.precio.toFixed(2)}` : <span className="text-gray-400 font-normal">Consultar catálogo</span>}
-                    </span>
-                  </div>
+          <div className="space-y-3">
+            {/* Selector de Interés Específico (RF1.3) */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1 flex items-center gap-1.5">
+                <Layers size={13} className="text-[var(--brand-primary)]" />
+                <span>¿A qué programa o módulo corresponde este pago?</span>
+                <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedInterestId}
+                onChange={(e) => setSelectedInterestId(e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--brand-primary)] font-medium"
+              >
+                <option value="">-- Pago Integral (Todos los cursos pendientes) --</option>
+                {lead.intereses?.map((it) => (
+                  <option key={it.id_interes} value={it.id_interes}>
+                    [{it.tipo}] {it.nombre_snapshot} {it.estado === 'MATRICULADO' ? '(YA MATRICULADO)' : `(${it.estado})`}
+                  </option>
                 ))}
-              </div>
+              </select>
+              <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                Permite asociar el pago específicamente a un diplomado o módulo cuando el prospecto tiene múltiples intereses simultáneos.
+              </p>
             </div>
 
             {/* Fila de Resumen Económico */}
@@ -237,10 +246,42 @@ export default function PaymentUploadModal({
               </div>
 
               <div className="pt-2 border-t border-[var(--border-color-light)] flex items-center justify-between text-sm font-bold text-[var(--text-heading)]">
-                <span>Monto Total Esperado:</span>
+                <span>Monto a Cancelar Sugerido:</span>
                 <span className="text-emerald-600 text-base">
                   Bs. {calculation.totalNeto.toFixed(2)}
                 </span>
+              </div>
+            </div>
+
+            {/* Método de Pago y Referencia */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1 flex items-center gap-1">
+                  <CreditCard size={13} />
+                  <span>Método de Pago</span>
+                </label>
+                <select
+                  value={metodoPago}
+                  onChange={(e) => setMetodoPago(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--brand-primary)]"
+                >
+                  <option value="TRANSFERENCIA">Transferencia Bancaria / Depósito</option>
+                  <option value="QR">Pago QR Simple</option>
+                  <option value="TARJETA">Tarjeta de Débito / Crédito</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
+                  N° Comprobante / Referencia
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej: BNB-TR-998822"
+                  value={referenciaTransaccion}
+                  onChange={(e) => setReferenciaTransaccion(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--brand-primary)]"
+                />
               </div>
             </div>
           </div>
@@ -262,11 +303,8 @@ export default function PaymentUploadModal({
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)]">
-              Monto del Comprobante (Bs.) <span className="text-red-500">*</span>
+              Monto Pagado Declarado (Bs.) <span className="text-red-500">*</span>
             </label>
-            <span className="text-[10px] text-[var(--text-muted)]">
-              (Único campo editable)
-            </span>
           </div>
           <div className="relative">
             <span className="absolute left-3 top-2.5 text-xs font-bold text-gray-500">
@@ -283,15 +321,12 @@ export default function PaymentUploadModal({
               required
             />
           </div>
-          <p className="text-[11px] text-[var(--text-muted)] mt-1">
-            Puedes ajustar este monto si el comprobante presenta un pago parcial o valor extraordinario.
-          </p>
         </div>
 
         {/* Input File Comprobante */}
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
-            Archivo del Comprobante <span className="text-red-500">*</span>
+            Archivo del Comprobante (Voucher) <span className="text-red-500">*</span>
           </label>
           <input
             type="file"

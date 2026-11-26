@@ -23,24 +23,6 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
         });
-
-        Schema::create('password_resets', function (Blueprint $table) {
-            $table->id('id_reset');
-            $table->foreignId('id_usuario')->constrained('usuarios', 'id_usuario')->cascadeOnDelete();
-            $table->string('token_hash', 255);
-            $table->timestamp('expira_en');
-            $table->boolean('usado')->default(false);
-            $table->timestamps();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
     }
 
     /**
@@ -48,8 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sessions');
-        Schema::dropIfExists('password_resets');
         Schema::dropIfExists('usuarios');
     }
 };
