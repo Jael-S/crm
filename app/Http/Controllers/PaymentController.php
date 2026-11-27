@@ -22,24 +22,61 @@ class PaymentController extends Controller
         $lead = Lead::findOrFail($id);
 
         $request->validate([
-            'comprobante' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
+            'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp,svg|max:5120',
             'monto' => 'nullable|numeric|min:0',
             'id_interes' => 'nullable|integer|exists:lead_interes,id_interes',
-            'metodo_pago' => 'nullable|string|in:TRANSFERENCIA,QR,TARJETA',
+            'metodo_pago' => 'nullable|string|in:TRANSFERENCIA,QR,TARJETA,BILLETERA',
             'referencia_transaccion' => 'nullable|string|max:100',
+            'stripe_titular' => 'nullable|string|max:100',
         ]);
+
+        $metodoPago = $request->input('metodo_pago', 'TRANSFERENCIA');
+        $referencia = $request->input('referencia_transaccion');
+        $archivo = $request->file('comprobante');
+
+        if (!$archivo && $metodoPago === 'TRANSFERENCIA') {
+            return redirect()->back()->withErrors([
+                'comprobante' => 'El archivo del comprobante es obligatorio para transferencias y depósitos bancarios.',
+            ]);
+        }
+
+        $archivoGenerado = null;
+        if (!$archivo && in_array($metodoPago, ['QR', 'TARJETA', 'BILLETERA'])) {
+            $idInteres = $request->input('id_interes');
+            $interes = $idInteres
+                ? $lead->intereses()->find($idInteres)
+                : ($lead->intereses()->where('estado', '!=', 'MATRICULADO')->first() ?: $lead->intereses()->first());
+
+            $monto = $request->input('monto') ? (float) $request->input('monto') : 0;
+            $titular = $request->input('stripe_titular') ?: $lead->nombre;
+
+            if ($metodoPago === 'TARJETA') {
+                $referencia = $referencia ?: ('ch_stripe_' . substr(md5(uniqid()), 0, 14));
+            } else {
+                $referencia = $referencia ?: ('QR-' . date('Ymd') . '-' . rand(10000, 99999));
+            }
+
+            $archivoGenerado = $this->paymentService->generarVoucherDigital(
+                $lead,
+                $interes,
+                $monto,
+                $metodoPago === 'BILLETERA' ? 'QR' : $metodoPago,
+                $referencia,
+                $titular
+            );
+        }
 
         $this->paymentService->subirComprobante(
             $lead,
-            $request->file('comprobante'),
+            $archivo ?: $archivoGenerado,
             $request->input('monto') ? (float) $request->input('monto') : null,
             $request->user()->id_usuario,
             $request->input('id_interes') ? (int) $request->input('id_interes') : null,
-            $request->input('metodo_pago', 'TRANSFERENCIA'),
-            $request->input('referencia_transaccion')
+            $metodoPago,
+            $referencia
         );
 
-        return redirect()->back()->with('success', 'Comprobante de pago subido correctamente.');
+        return redirect()->back()->with('success', 'Comprobante de pago registrado correctamente.');
     }
 
     public function reviewQueue(Request $request): Response
@@ -85,7 +122,39 @@ class PaymentController extends Controller
 
     public function approve(int $id, Request $request): RedirectResponse
     {
-        $comprobante = ComprobantePago::findOrFail($id);
+        $comprobante = ComprobantePago::with('lead')->findOrFail($id);
+        $lead = $comprobante->lead;
+
+        // Si se envían datos para completar la ficha del estudiante antes de matricular
+        if ($lead) {
+            $updated = false;
+            if ($request->filled('ci')) {
+                $lead->ci = trim((string) $request->input('ci'));
+                $updated = true;
+            }
+            if ($request->filled('fecha_nacimiento')) {
+                $lead->fecha_nacimiento = $request->input('fecha_nacimiento');
+                $updated = true;
+            }
+            if ($request->filled('ciudad')) {
+                $lead->ciudad = trim((string) $request->input('ciudad'));
+                $updated = true;
+            }
+            if ($updated) {
+                $lead->save();
+            }
+
+            // Validar que no se envíe a matricular con campos obligatorios vacíos
+            $faltantes = [];
+            if (empty($lead->ci)) $faltantes[] = 'Cédula de Identidad (CI)';
+            if (empty($lead->fecha_nacimiento)) $faltantes[] = 'Fecha de Nacimiento';
+            if (empty($lead->ciudad)) $faltantes[] = 'Ciudad de Residencia';
+
+            if (!empty($faltantes)) {
+                return redirect()->back()->with('error', 'No se puede aprobar la matrícula: Debe completar ' . implode(', ', $faltantes) . ' del estudiante.');
+            }
+        }
+
         $envio = $this->paymentService->aprobar($comprobante, $request->user()->id_usuario);
 
         if ($envio && $envio->estado === 'ENVIADO') {
@@ -93,7 +162,7 @@ class PaymentController extends Controller
         }
 
         if ($envio && $envio->estado === 'ERROR') {
-            return redirect()->back()->with('warning', 'La matrícula fue rechazada por la API del Proyecto 2. El comprobante no fue aprobado y el prospecto permanece en Promesa de Pago: ' . ($envio->respuesta_api ?? 'Error de validación'));
+            return redirect()->back()->with('warning', 'La matrícula fue rechazada por la API del Proyecto 2: ' . ($envio->respuesta_api ?? 'Error de validación'));
         }
 
         return redirect()->back()->with('success', 'Comprobante procesado.');
