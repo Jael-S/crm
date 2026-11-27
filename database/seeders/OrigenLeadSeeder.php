@@ -14,6 +14,7 @@ class OrigenLeadSeeder extends Seeder
             ['id_origen' => 2, 'nombre' => 'WhatsApp'],
             ['id_origen' => 3, 'nombre' => 'Web'],
             ['id_origen' => 4, 'nombre' => 'Referido'],
+            ['id_origen' => 13, 'nombre' => 'LinkedIn'],
         ]);
 
         if (DB::getDriverName() === 'pgsql') {
