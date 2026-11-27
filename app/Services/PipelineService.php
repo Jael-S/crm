@@ -85,6 +85,20 @@ class PipelineService
             $etapaAnterior = $lead->etapa;
             $etapaNueva = EtapaPipeline::findOrFail($nuevaEtapaId);
 
+            // Regla: No permitir revertir un alumno Convertido sin privilegios de Administrador
+            if ($lead->id_etapa === 5 && $nuevaEtapaId !== 5 && !$usuario->isAdmin()) {
+                throw ValidationException::withMessages([
+                    'id_etapa' => 'No es posible revertir la etapa de un alumno ya matriculado y Convertido. Solo el Administrador puede gestionar esta excepción.',
+                ]);
+            }
+
+            // Regla de Negocio: No permitir etapa "En Contacto" o superior sin vendedor asignado
+            if ($nuevaEtapaId >= 2 && $nuevaEtapaId !== 6 && empty($lead->id_vendedor)) {
+                throw ValidationException::withMessages([
+                    'id_vendedor' => "No es posible mover el prospecto a la etapa '{$etapaNueva->nombre}' sin tener un vendedor asignado. Asigne un asesor comercial previamente.",
+                ]);
+            }
+
             // Regla RF3.3: Marcar como Perdido requiere motivo obligatorio
             if ($nuevaEtapaId === 6) {
                 if (empty($datos['id_motivo_perdida'])) {

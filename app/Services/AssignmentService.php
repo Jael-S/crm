@@ -6,6 +6,7 @@ use App\Models\AsignacionLead;
 use App\Models\Lead;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AssignmentService
 {
@@ -16,8 +17,16 @@ class AssignmentService
     public function asignarManual(Lead $lead, int $idVendedorNuevo, int $idAsignador): Lead
     {
         return DB::transaction(function () use ($lead, $idVendedorNuevo, $idAsignador) {
-            $vendedorNuevo = Usuario::findOrFail($idVendedorNuevo);
             $idVendedorAnterior = $lead->id_vendedor;
+
+            // Validación: No permitir reasignar al mismo vendedor
+            if (!is_null($idVendedorAnterior) && (int) $idVendedorAnterior === $idVendedorNuevo) {
+                throw ValidationException::withMessages([
+                    'id_vendedor' => 'El prospecto ya se encuentra asignado a este vendedor. Debe seleccionar un vendedor diferente.',
+                ]);
+            }
+
+            $vendedorNuevo = Usuario::findOrFail($idVendedorNuevo);
 
             // Actualizar prospecto
             $lead->update([
@@ -59,8 +68,16 @@ class AssignmentService
     public function transferir(Lead $lead, int $idVendedorNuevo, string $motivo, int $idAsignador): Lead
     {
         return DB::transaction(function () use ($lead, $idVendedorNuevo, $motivo, $idAsignador) {
-            $vendedorNuevo = Usuario::findOrFail($idVendedorNuevo);
             $idVendedorAnterior = $lead->id_vendedor;
+
+            // Validación: No permitir reasignar al mismo vendedor
+            if (!is_null($idVendedorAnterior) && (int) $idVendedorAnterior === $idVendedorNuevo) {
+                throw ValidationException::withMessages([
+                    'id_vendedor' => 'El prospecto ya se encuentra asignado a este vendedor. Debe seleccionar un vendedor diferente.',
+                ]);
+            }
+
+            $vendedorNuevo = Usuario::findOrFail($idVendedorNuevo);
 
             // Actualizar prospecto
             $lead->update([

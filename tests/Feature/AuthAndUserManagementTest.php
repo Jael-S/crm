@@ -41,16 +41,20 @@ class AuthAndUserManagementTest extends TestCase
 
     public function test_inactive_user_cannot_login(): void
     {
-        $usuario = Usuario::where('correo', 'vendedor2@crm.bo')->first();
+        $usuario = Usuario::where('id_rol', 3)->first();
+        $this->assertNotNull($usuario);
         $usuario->update(['activo' => false]);
 
         $response = $this->post('/login', [
-            'correo' => 'vendedor2@crm.bo',
+            'correo' => $usuario->correo,
             'password' => 'password123',
         ]);
 
         $response->assertSessionHasErrors('correo');
         $this->assertGuest();
+        
+        // Restaurar estado activo
+        $usuario->update(['activo' => true]);
     }
 
     public function test_admin_can_access_user_management(): void

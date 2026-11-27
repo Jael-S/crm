@@ -157,15 +157,27 @@ export default function LeadsEdit({ lead, origenes = [], etapas = [], profesione
                   <select
                     value={data.id_etapa}
                     onChange={(e) => setData('id_etapa', e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[#7aa5ff]"
+                    className={`w-full pl-9 pr-3 py-2 text-sm bg-white border rounded-[var(--radius-sm)] focus:outline-none ${
+                      errors.id_etapa ? 'border-red-500' : 'border-[var(--border-color-dark)] focus:border-[#7aa5ff]'
+                    }`}
                   >
                     {etapas.map((etapa) => (
-                      <option key={etapa.id_etapa} value={etapa.id_etapa}>
-                        {etapa.nombre}
+                      <option
+                        key={etapa.id_etapa}
+                        value={etapa.id_etapa}
+                        disabled={!lead.id_vendedor && etapa.id_etapa >= 2 && etapa.id_etapa !== 6}
+                      >
+                        {etapa.nombre} {!lead.id_vendedor && etapa.id_etapa >= 2 && etapa.id_etapa !== 6 ? '(Requiere Vendedor Asignado)' : ''}
                       </option>
                     ))}
                   </select>
                 </div>
+                {errors.id_etapa && <p className="text-xs text-red-500 mt-1">{errors.id_etapa}</p>}
+                {!lead.id_vendedor && (
+                  <p className="text-[11px] text-amber-700 mt-1 font-medium">
+                    ⚠️ Prospecto en Bolsa Común: No puede moverse a "En Contacto" ni etapas avanzadas sin asignarle un asesor previamente.
+                  </p>
+                )}
               </div>
             </div>
 

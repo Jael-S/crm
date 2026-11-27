@@ -59,16 +59,30 @@ export default function LeadsShow({
     id_descuento: '',
   });
 
-  // Formulario Asignación Manual
+  // Formulario Asignación Manual (Desde Bolsa Común)
   const assignForm = useForm({
     id_vendedor: vendedores[0]?.id_usuario || '',
   });
 
-  // Formulario Transferencia con Motivo
+  // Vendedores disponibles para reasignación (excluyendo al asesor actual)
+  const availableSellersForTransfer = vendedores.filter(
+    (v) => v.id_usuario !== lead.id_vendedor
+  );
+
+  // Formulario Reasignación / Transferencia (Requiere Motivo Obligatorio)
   const transferForm = useForm({
-    id_vendedor: vendedores[0]?.id_usuario || '',
+    id_vendedor: availableSellersForTransfer[0]?.id_usuario || '',
     motivo: '',
   });
+
+  const handleOpenTransferModal = () => {
+    transferForm.setData({
+      id_vendedor: availableSellersForTransfer[0]?.id_usuario || '',
+      motivo: '',
+    });
+    transferForm.clearErrors();
+    setTransferModalOpen(true);
+  };
 
   // Modales y formularios de Nataly (Fase 2 y 3)
   const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -810,24 +824,16 @@ export default function LeadsShow({
                     </div>
                   )}
 
-                  {/* Acciones de reasignación y transferencia */}
+                  {/* Acción unificada de reasignación con motivo obligatorio */}
                   {canAssign && (
-                    <div className="pt-3 border-t border-[var(--border-color-light)] space-y-2">
+                    <div className="pt-3 border-t border-[var(--border-color-light)]">
                       <Button
                         variant="secondary"
-                        onClick={() => setAssignModalOpen(true)}
+                        onClick={handleOpenTransferModal}
                         className="w-full text-xs py-2 justify-center"
                       >
-                        <UserPlus size={14} className="mr-1.5" />
-                        Reasignar Asesor
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => setTransferModalOpen(true)}
-                        className="w-full text-xs py-2 justify-center border border-[var(--border-color-dark)]"
-                      >
                         <ArrowRightLeft size={14} className="mr-1.5" />
-                        Transferir con Motivo
+                        Reasignar / Transferir Asesor
                       </Button>
                     </div>
                   )}
@@ -878,7 +884,9 @@ export default function LeadsShow({
               <select
                 value={assignForm.data.id_vendedor}
                 onChange={(e) => assignForm.setData('id_vendedor', e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[#7aa5ff]"
+                className={`w-full px-3 py-2 text-sm bg-white border rounded-[var(--radius-sm)] focus:outline-none ${
+                  assignForm.errors.id_vendedor ? 'border-red-500' : 'border-[var(--border-color-dark)] focus:border-[#7aa5ff]'
+                }`}
                 required
               >
                 {vendedores.map((v) => (
@@ -887,6 +895,9 @@ export default function LeadsShow({
                   </option>
                 ))}
               </select>
+              {assignForm.errors.id_vendedor && (
+                <p className="text-xs text-red-500 mt-1">{assignForm.errors.id_vendedor}</p>
+              )}
             </div>
 
             <div className="pt-3 border-t border-[var(--border-color-light)] flex justify-end gap-2">
@@ -948,55 +959,80 @@ export default function LeadsShow({
           </form>
         </Modal>
 
-        {/* Modal: Transferencia con Motivo */}
+        {/* Modal: Reasignación / Transferencia con Motivo Obligatorio */}
         <Modal
           isOpen={transferModalOpen}
           onClose={() => setTransferModalOpen(false)}
-          title="Transferir Prospecto a Otro Asesor"
+          title="Reasignar / Transferir Prospecto"
         >
           <form onSubmit={handleTransferSubmit} className="space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-[var(--radius-sm)] text-xs text-blue-900">
+              <span className="font-semibold block">Asesor actual asignado:</span>
+              <p className="mt-0.5 text-blue-800 font-bold">{lead.vendedor?.nombre_completo || 'Sin Asignar'}</p>
+            </div>
+
             <p className="text-xs text-[var(--text-muted)]">
-              Ingresa el nuevo asesor y la justificación o motivo de la transferencia.
+              Selecciona el nuevo asesor comercial y especifica la justificación de la reasignación.
             </p>
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
-                Nuevo Asesor Comercial
+                Nuevo Asesor Comercial <span className="text-red-500">*</span>
               </label>
               <select
                 value={transferForm.data.id_vendedor}
                 onChange={(e) => transferForm.setData('id_vendedor', e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[#7aa5ff]"
+                className={`w-full px-3 py-2 text-sm bg-white border rounded-[var(--radius-sm)] focus:outline-none ${
+                  transferForm.errors.id_vendedor ? 'border-red-500' : 'border-[var(--border-color-dark)] focus:border-[#7aa5ff]'
+                }`}
                 required
               >
-                {vendedores.map((v) => (
-                  <option key={v.id_usuario} value={v.id_usuario}>
-                    {v.nombre_completo}
+                {availableSellersForTransfer.length > 0 ? (
+                  availableSellersForTransfer.map((v) => (
+                    <option key={v.id_usuario} value={v.id_usuario}>
+                      {v.nombre_completo}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>
+                    No hay otros vendedores disponibles
                   </option>
-                ))}
+                )}
               </select>
+              {transferForm.errors.id_vendedor && (
+                <p className="text-xs text-red-500 mt-1">{transferForm.errors.id_vendedor}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-heading)] mb-1">
-                Motivo de la Transferencia <span className="text-red-500">*</span>
+                Motivo de la Reasignación <span className="text-red-500">*</span>
               </label>
               <textarea
                 rows={3}
-                placeholder="Ej. Reasignación por turno matutino, solicitud expresa del cliente..."
+                placeholder="Ej. Reasignación por turno matutino, balance de cartera, solicitud expresa del cliente..."
                 value={transferForm.data.motivo}
                 onChange={(e) => transferForm.setData('motivo', e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-white border border-[var(--border-color-dark)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[#7aa5ff]"
+                className={`w-full px-3 py-2 text-sm bg-white border rounded-[var(--radius-sm)] focus:outline-none ${
+                  transferForm.errors.motivo ? 'border-red-500' : 'border-[var(--border-color-dark)] focus:border-[#7aa5ff]'
+                }`}
                 required
               />
+              {transferForm.errors.motivo && (
+                <p className="text-xs text-red-500 mt-1">{transferForm.errors.motivo}</p>
+              )}
             </div>
 
             <div className="pt-3 border-t border-[var(--border-color-light)] flex justify-end gap-2">
               <Button variant="ghost" type="button" onClick={() => setTransferModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" variant="primary" disabled={transferForm.processing}>
-                {transferForm.processing ? 'Transferir...' : 'Confirmar Transferencia'}
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={transferForm.processing || availableSellersForTransfer.length === 0}
+              >
+                {transferForm.processing ? 'Reasignando...' : 'Confirmar Reasignación'}
               </Button>
             </div>
           </form>

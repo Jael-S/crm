@@ -122,6 +122,12 @@ export default function PipelineKanban({
 
   // Orquestador de transiciones
   const triggerStageTransition = (lead, targetStageId) => {
+    // 0. Regla: No puede avanzar a "En Contacto" o etapas posteriores sin vendedor asignado
+    if (targetStageId >= 2 && targetStageId !== 6 && !lead.id_vendedor) {
+      alert('⚠️ Validación de Proceso Comercial:\n\nNo es posible mover el prospecto a la etapa solicitada porque no tiene un asesor comercial asignado.\n\nAsigne primero un vendedor desde la Bolsa Común o la ficha del prospecto.');
+      return;
+    }
+
     // 1. Regla RF3.3: Marcar como Perdido (etapa 6) exige motivo
     if (targetStageId === 6) {
       setLostModalData({ lead, targetStageId });

@@ -10,7 +10,7 @@ class LeadRoutesTest extends TestCase
 {
     public function test_admin_can_access_leads_and_bolsa_comun(): void
     {
-        $admin = Usuario::find(1); // Admin Nataly
+        $admin = Usuario::where('id_rol', 1)->where('activo', true)->first();
 
         // 1. Probar acceso a /leads
         $response = $this->actingAs($admin)->get('/leads');
@@ -28,7 +28,7 @@ class LeadRoutesTest extends TestCase
 
     public function test_vendedor_can_access_own_leads_and_bolsa_comun(): void
     {
-        $vendedor = Usuario::find(3); // Nicol Flores (Vendedora 1)
+        $vendedor = Usuario::where('id_rol', 3)->where('activo', true)->first();
 
         $response = $this->actingAs($vendedor)->get('/leads');
         $response->assertStatus(200);

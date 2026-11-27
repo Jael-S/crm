@@ -31,6 +31,8 @@ class UpdateLeadRequest extends FormRequest
             'ciudad' => ['nullable', 'string', 'max:60'],
             'id_profesion' => ['nullable', 'integer', 'exists:profesiones,id_profesion'],
             'id_descuento' => ['nullable', 'integer', 'exists:descuentos,id_descuento'],
+            'id_motivo_perdida' => ['nullable', 'integer', 'exists:motivos_perdida,id_motivo'],
+            'comentario_perdida' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -52,5 +54,48 @@ class UpdateLeadRequest extends FormRequest
             'id_profesion.exists' => 'La profesión seleccionada no es válida.',
             'id_descuento.exists' => 'El descuento seleccionado no es válido.',
         ];
+    }
+
+    /**
+     * Regla adicional: No permitir cambiar a "En Contacto" o superior sin vendedor asignado.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $leadId = $this->route('id');
+            $etapaDestino = (int) $this->input('id_etapa');
+
+            if ($leadId && $etapaDestino) {
+                $lead = \App\Models\Lead::find($leadId);
+                if ($lead) {
+                    if ($etapaDestino >= 2 && $etapaDestino !== 6 && empty($lead->id_vendedor) && empty($this->input('id_vendedor'))) {
+                        $validator->errors()->add(
+                            'id_etapa',
+                            'El prospecto no puede estar en la etapa "En Contacto" o superior sin tener un vendedor asignado.'
+                        );
+                    }
+
+                    if ($etapaDestino === 6 && empty($this->input('id_motivo_perdida')) && empty($lead->id_motivo_perdida)) {
+                        $validator->errors()->add(
+                            'id_motivo_perdida',
+                            'Debe seleccionar obligatoriamente un motivo de descarte si marca el prospecto como Perdido.'
+                        );
+                    }
+
+                    if ($etapaDestino === 5) {
+                        $ci = $this->input('ci') ?: $lead->ci;
+                        $fechaNac = $this->input('fecha_nacimiento') ?: $lead->fecha_nacimiento;
+                        $ciudad = $this->input('ciudad') ?: $lead->ciudad;
+
+                        if (empty($ci) || empty($fechaNac) || empty($ciudad)) {
+                            $validator->errors()->add(
+                                'id_etapa',
+                                'Para convertir el prospecto a Alumno debe completar CI, Fecha de Nacimiento y Ciudad.'
+                            );
+                        }
+                    }
+                }
+            }
+        });
     }
 }
