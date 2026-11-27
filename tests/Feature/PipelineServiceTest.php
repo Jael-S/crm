@@ -21,7 +21,34 @@ class PipelineServiceTest extends TestCase
         parent::setUp();
         $this->pipelineService = app(PipelineService::class);
         $this->admin = Usuario::where('correo', 'admin@crm.bo')->first();
-        $this->lead = Lead::first();
+        $this->lead = Lead::whereNotNull('id_vendedor')->first() ?? Lead::first();
+        if ($this->lead && is_null($this->lead->id_vendedor)) {
+            $this->lead->update(['id_vendedor' => 3]);
+        }
+    }
+
+    public function test_mover_a_en_contacto_sin_vendedor_lanza_excepcion(): void
+    {
+        $leadSinVendedor = Lead::whereNull('id_vendedor')->first();
+        if (!$leadSinVendedor) {
+            $leadSinVendedor = Lead::create([
+                'nombre' => 'Test Sin Vendedor',
+                'telefono' => '71112233',
+                'id_origen' => 1,
+                'id_etapa' => 1,
+                'id_vendedor' => null,
+                'created_by' => $this->admin->id_usuario,
+            ]);
+        }
+
+        $this->expectException(ValidationException::class);
+
+        $this->pipelineService->cambiarEtapa(
+            $leadSinVendedor,
+            2, // En Contacto
+            [],
+            $this->admin
+        );
     }
 
     public function test_obtener_tablero_retorna_6_columnas(): void

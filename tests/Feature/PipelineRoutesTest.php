@@ -16,9 +16,12 @@ class PipelineRoutesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->admin = Usuario::where('correo', 'admin@crm.bo')->first();
-        $this->vendedor = Usuario::where('correo', 'vendedor1@crm.bo')->first();
-        $this->lead = Lead::first();
+        $this->admin = Usuario::where('correo', 'admin@crm.bo')->first() ?? Usuario::where('id_rol', 1)->first();
+        $this->vendedor = Usuario::where('id_rol', 3)->first();
+        $this->lead = Lead::whereNotNull('id_vendedor')->first() ?? Lead::first();
+        if ($this->lead && is_null($this->lead->id_vendedor)) {
+            $this->lead->update(['id_vendedor' => $this->vendedor->id_usuario]);
+        }
     }
 
     public function test_admin_can_access_pipeline_and_origenes(): void

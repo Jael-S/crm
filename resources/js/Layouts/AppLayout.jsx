@@ -187,6 +187,7 @@ export default function AppLayout({ children, title, hideFlash = false }) {
       id: 'cu5',
       title: 'MOTIVOS DE PÉRDIDA',
       items: [
+        { name: 'Gestión de Motivos', href: '/motivos-perdida', icon: XCircle, roles: ['Administrador', 'Coordinador'] },
         { name: 'Catálogo de Bajas', href: '/pipeline?etapa=6', icon: XCircle, roles: ['Administrador', 'Coordinador', 'Vendedor'] },
       ]
     },
@@ -205,7 +206,7 @@ export default function AppLayout({ children, title, hideFlash = false }) {
       ]
     },
     {
-id: 'cu8',
+      id: 'cu8',
       title: 'ANALÍTICA Y BI',
       items: [
         { name: 'Reportes y Analítica', href: '/reportes', icon: BarChart3, roles: ['Administrador', 'Coordinador'] },

@@ -26,6 +26,7 @@ class StoreLeadRequest extends FormRequest
             'correo' => ['nullable', 'string', 'email', 'max:120'],
             'id_origen' => ['required', 'integer', 'exists:origenes_lead,id_origen'],
             'id_vendedor' => ['nullable', 'integer', 'exists:usuarios,id_usuario'],
+            'id_etapa' => ['nullable', 'integer', 'exists:etapas_pipeline,id_etapa'],
             'id_profesion' => ['nullable', 'integer', 'exists:profesiones,id_profesion'],
             'id_descuento' => ['nullable', 'integer', 'exists:descuentos,id_descuento'],
         ];
@@ -46,8 +47,25 @@ class StoreLeadRequest extends FormRequest
             'id_origen.required' => 'Debe seleccionar un canal de origen.',
             'id_origen.exists' => 'El origen seleccionado no es válido.',
             'id_vendedor.exists' => 'El vendedor seleccionado no existe.',
+            'id_etapa.exists' => 'La etapa seleccionada no es válida.',
             'id_profesion.exists' => 'La profesión seleccionada no es válida.',
             'id_descuento.exists' => 'El descuento seleccionado no es válido.',
         ];
+    }
+
+    /**
+     * Regla adicional: No permitir registrar directamente en "En Contacto" o superior sin vendedor asignado.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $etapaDestino = (int) $this->input('id_etapa', 1);
+            if ($etapaDestino >= 2 && $etapaDestino !== 6 && empty($this->input('id_vendedor'))) {
+                $validator->errors()->add(
+                    'id_vendedor',
+                    'No es posible registrar el prospecto en la etapa "En Contacto" o superior sin asignarle un vendedor.'
+                );
+            }
+        });
     }
 }

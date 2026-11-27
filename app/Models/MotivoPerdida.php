@@ -11,4 +11,9 @@ class MotivoPerdida extends Model
     public $timestamps = false;
 
     protected $fillable = ['nombre'];
+
+    public function leads()
+    {
+        return $this->hasMany(Lead::class, 'id_motivo_perdida', 'id_motivo');
+    }
 }

@@ -57,7 +57,11 @@ class LeadService
 
         // Filtro por vendedor (solo relevante si es Admin o Coordinador)
         if (!empty($filtros['id_vendedor']) && ($user->isAdmin() || $user->isCoordinador())) {
-            $query->where('id_vendedor', $filtros['id_vendedor']);
+            if ($filtros['id_vendedor'] === 'sin_asignar') {
+                $query->whereNull('id_vendedor');
+            } else {
+                $query->where('id_vendedor', (int) $filtros['id_vendedor']);
+            }
         }
 
         return $query->latest('id_lead')->paginate($perPage)->withQueryString();
@@ -142,7 +146,24 @@ class LeadService
      */
     public function actualizar(Lead $lead, array $datos): Lead
     {
+        $etapaAnterior = $lead->id_etapa;
+        $nuevaEtapa = isset($datos['id_etapa']) ? (int) $datos['id_etapa'] : null;
+
         $lead->update($datos);
+
+        if ($nuevaEtapa && $nuevaEtapa !== $etapaAnterior) {
+            $etapaAntModel = \App\Models\EtapaPipeline::find($etapaAnterior);
+            $etapaNuevaModel = \App\Models\EtapaPipeline::find($nuevaEtapa);
+            BitacoraService::registrar(
+                $lead->id_lead,
+                'CAMBIO_ESTADO',
+                "Prospecto movido de la etapa '{$etapaAntModel?->nombre}' a '{$etapaNuevaModel?->nombre}' desde formulario de edición",
+                auth()->id() ?? 1,
+                $etapaAnterior,
+                $nuevaEtapa
+            );
+        }
+
         return $lead->fresh(['origen', 'etapa', 'vendedor', 'creador']);
     }
 

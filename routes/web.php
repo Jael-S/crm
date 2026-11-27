@@ -13,6 +13,7 @@ use App\Http\Controllers\LeadInterestController;
 use App\Http\Controllers\CoordinatorVersionController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\OrigenLeadController;
+use App\Http\Controllers\MotivoPerdidaController;
 use App\Http\Controllers\DescuentoController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\RecordatorioController;
@@ -90,9 +91,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('/origenes/{id}', [OrigenLeadController::class, 'destroy'])->whereNumber('id')->name('origenes.destroy');
     });
 
-    // Asignación manual y Transferencias (Administrador y Coordinador - RF2.3 Miriam)
+    // Motivos de Pérdida (Administrador y Coordinador)
     Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
+        Route::get('/motivos-perdida', [MotivoPerdidaController::class, 'index'])->name('motivos-perdida.index');
+        Route::post('/motivos-perdida', [MotivoPerdidaController::class, 'store'])->name('motivos-perdida.store');
+        Route::put('/motivos-perdida/{id}', [MotivoPerdidaController::class, 'update'])->whereNumber('id')->name('motivos-perdida.update');
+        Route::delete('/motivos-perdida/{id}', [MotivoPerdidaController::class, 'destroy'])->whereNumber('id')->name('motivos-perdida.destroy');
+    });
+
+    // Asignación manual (Admin/Coordinador y Vendedor para bolsa común) y Transferencias (Admin/Coordinador)
+    Route::middleware('checkRole:Administrador,Coordinador,Vendedor')->group(function () {
         Route::post('/leads/{id}/asignar', [LeadAssignmentController::class, 'assign'])->whereNumber('id')->name('leads.assign');
+    });
+
+    Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
         Route::post('/leads/{id}/transferir', [LeadAssignmentController::class, 'transfer'])->whereNumber('id')->name('leads.transfer');
     });
 

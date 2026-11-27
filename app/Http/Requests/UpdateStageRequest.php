@@ -47,4 +47,25 @@ class UpdateStageRequest extends FormRequest
             'ciudad.max' => 'La ciudad no puede superar los 60 caracteres.',
         ];
     }
+
+    /**
+     * Regla adicional: No permitir mover a "En Contacto" o superior sin vendedor asignado.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $leadId = $this->route('id');
+            $etapaDestino = (int) $this->input('id_etapa');
+
+            if ($leadId && $etapaDestino >= 2 && $etapaDestino !== 6) {
+                $lead = \App\Models\Lead::find($leadId);
+                if ($lead && empty($lead->id_vendedor)) {
+                    $validator->errors()->add(
+                        'id_vendedor',
+                        'No es posible mover el prospecto a la etapa seleccionada sin tener un vendedor asignado. Asigne un asesor comercial primero.'
+                    );
+                }
+            }
+        });
+    }
 }
