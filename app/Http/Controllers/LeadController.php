@@ -244,7 +244,7 @@ class LeadController extends Controller
     }
 
     /**
-     * Búsqueda global predictiva en el Header (Requisito Evans).
+     * Búsqueda global predictiva en el Header (Módulos y Prospectos).
      */
     public function globalSearch(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -254,6 +254,131 @@ class LeadController extends Controller
         }
 
         $user = $request->user();
+        $roleName = $user->rol?->nombre ?? 'Vendedor';
+        $normalizedQ = mb_strtolower(preg_replace('/[^\p{L}\p{N}\s]/u', '', $q));
+
+        // 1. Módulos y Secciones del Sistema
+        $modulosDisponibles = [
+            [
+                'nombre' => 'Catálogo Académico',
+                'categoria' => 'Captación y Oferta',
+                'keywords' => ['catalogo', 'academico', 'cursos', 'programas', 'modulos', 'cohortes', 'materias'],
+                'url' => '/catalogo',
+                'roles' => ['Administrador', 'Coordinador'],
+            ],
+            [
+                'nombre' => 'Registrar Prospecto',
+                'categoria' => 'Captación y Oferta',
+                'keywords' => ['captacion', 'oferta', 'registrar', 'nuevo prospecto', 'crear lead', 'formulario'],
+                'url' => '/leads/create',
+                'roles' => ['Administrador', 'Coordinador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Canales de Origen',
+                'categoria' => 'Captación y Oferta',
+                'keywords' => ['canales', 'origen', 'origenes', 'fuentes', 'captacion', 'marketing'],
+                'url' => '/origenes',
+                'roles' => ['Administrador', 'Coordinador'],
+            ],
+            [
+                'nombre' => 'Descuentos y Becas',
+                'categoria' => 'Captación y Oferta',
+                'keywords' => ['descuentos', 'becas', 'promociones', 'beneficios', 'fidelidad', 'alumnos'],
+                'url' => '/descuentos',
+                'roles' => ['Administrador'],
+            ],
+            [
+                'nombre' => 'Gestión de Usuarios',
+                'categoria' => 'Usuarios y Roles',
+                'keywords' => ['usuarios', 'roles', 'permisos', 'empleados', 'vendedores', 'coordinadores', 'cuentas'],
+                'url' => '/usuarios',
+                'roles' => ['Administrador'],
+            ],
+            [
+                'nombre' => 'Bolsa Común (Etapa 1)',
+                'categoria' => 'Asignación Comercial',
+                'keywords' => ['bolsa', 'comun', 'asignacion', 'round robin', 'reparto', 'sin asignar', 'etapa 1'],
+                'url' => '/leads/bolsa-comun',
+                'roles' => ['Administrador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Tablero Pipeline (Kanban)',
+                'categoria' => 'Embudo Kanban',
+                'keywords' => ['pipeline', 'kanban', 'tablero', 'embudo', 'etapas', 'flujo'],
+                'url' => '/pipeline',
+                'roles' => ['Administrador', 'Coordinador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Mis Prospectos',
+                'categoria' => 'Embudo Kanban',
+                'keywords' => ['prospectos', 'mis prospectos', 'leads', 'cartera', 'clientes', 'contactos'],
+                'url' => '/leads',
+                'roles' => ['Administrador', 'Coordinador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Catálogo de Bajas (Motivos de Pérdida)',
+                'categoria' => 'Motivos de Pérdida',
+                'keywords' => ['bajas', 'perdidas', 'descalificados', 'motivos', 'perdido'],
+                'url' => '/pipeline?etapa=6',
+                'roles' => ['Administrador', 'Coordinador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Revisión de Pagos',
+                'categoria' => 'Pagos y Matrícula',
+                'keywords' => ['pagos', 'revision', 'comprobantes', 'matricula', 'cobro', 'promesa', 'caja'],
+                'url' => '/pagos/revision',
+                'roles' => ['Administrador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Recordatorios y Tareas',
+                'categoria' => 'Bitácora y Agenda',
+                'keywords' => ['recordatorios', 'agenda', 'tareas', 'alertas', 'bitacora', 'llamadas'],
+                'url' => '/recordatorios',
+                'roles' => ['Administrador', 'Coordinador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Embudo General (Dashboard)',
+                'categoria' => 'Analítica y BI',
+                'keywords' => ['dashboard', 'analitica', 'metricas', 'embudo general', 'bi', 'reportes', 'graficos', 'kpi'],
+                'url' => '/dashboard',
+                'roles' => ['Administrador', 'Coordinador', 'Vendedor'],
+            ],
+            [
+                'nombre' => 'Métricas de Coordinador',
+                'categoria' => 'Analítica y BI',
+                'keywords' => ['coordinadores', 'versiones', 'metricas coordinador', 'programas'],
+                'url' => '/coordinadores/versiones',
+                'roles' => ['Administrador', 'Coordinador'],
+            ],
+        ];
+
+        $matchedModulos = collect($modulosDisponibles)
+            ->filter(function ($mod) use ($roleName, $normalizedQ) {
+                if (!in_array($roleName, $mod['roles'])) {
+                    return false;
+                }
+                $nombreNorm = mb_strtolower($mod['nombre']);
+                $catNorm = mb_strtolower($mod['categoria']);
+                if (str_contains($nombreNorm, $normalizedQ) || str_contains($catNorm, $normalizedQ)) {
+                    return true;
+                }
+                foreach ($mod['keywords'] as $kw) {
+                    if (str_contains($kw, $normalizedQ) || str_contains($normalizedQ, $kw)) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            ->map(fn ($m) => [
+                'tipo' => 'modulo',
+                'id' => 'mod_' . md5($m['url']),
+                'nombre' => $m['nombre'],
+                'categoria' => $m['categoria'],
+                'url' => $m['url'],
+            ])
+            ->values();
+
+        // 2. Búsqueda de Prospectos / Leads
         $query = Lead::query();
 
         if ($user->isVendedor()) {
@@ -263,7 +388,7 @@ class LeadController extends Controller
             });
         }
 
-        $results = $query->where(function ($sub) use ($q) {
+        $matchedLeads = $query->where(function ($sub) use ($q) {
             $sub->where('nombre', 'ilike', "%{$q}%")
                 ->orWhere('correo', 'ilike', "%{$q}%")
                 ->orWhere('ci', 'ilike', "%{$q}%")
@@ -273,6 +398,7 @@ class LeadController extends Controller
         ->limit(6)
         ->get(['id_lead', 'nombre', 'correo', 'ci', 'telefono', 'id_etapa', 'id_vendedor'])
         ->map(fn ($lead) => [
+            'tipo' => 'lead',
             'id' => $lead->id_lead,
             'nombre' => $lead->nombre,
             'ci' => $lead->ci,
@@ -282,6 +408,8 @@ class LeadController extends Controller
             'url' => "/leads/{$lead->id_lead}",
         ]);
 
-        return response()->json(['results' => $results]);
+        $allResults = $matchedModulos->concat($matchedLeads);
+
+        return response()->json(['results' => $allResults]);
     }
 }

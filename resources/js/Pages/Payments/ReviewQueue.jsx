@@ -60,15 +60,49 @@ export default function ReviewQueue({
     setUploadModalOpen(true);
   };
 
+  // Modal para completar datos faltantes antes de matricular
+  const [studentModalData, setStudentModalData] = useState(null);
+
   // Disparar Aprobación con feedback y Spinner
-  const handleApprove = (id) => {
+  const handleApprove = (c) => {
+    const lead = c.lead;
+    const missing = !lead?.ci || !lead?.fecha_nacimiento || !lead?.ciudad;
+
+    if (missing) {
+      setStudentModalData({
+        comprobante: c,
+        lead: lead,
+        ci: lead?.ci || '',
+        fecha_nacimiento: lead?.fecha_nacimiento ? lead.fecha_nacimiento.split('T')[0] : '',
+        ciudad: lead?.ciudad || lead?.ciudad_expedido || '',
+      });
+      return;
+    }
+
     if (confirm('¿Confirmar aprobación del comprobante y matricular en el microservicio de Proyecto 2?')) {
-      setApprovingId(id);
-      router.post(`/pagos/${id}/aprobar`, {}, {
+      setApprovingId(c.id_comprobante);
+      router.post(`/pagos/${c.id_comprobante}/aprobar`, {}, {
         preserveScroll: true,
         onFinish: () => setApprovingId(null),
       });
     }
+  };
+
+  const handleStudentModalSubmit = (e) => {
+    e.preventDefault();
+    if (!studentModalData) return;
+    const c = studentModalData.comprobante;
+    setApprovingId(c.id_comprobante);
+
+    router.post(`/pagos/${c.id_comprobante}/aprobar`, {
+      ci: studentModalData.ci,
+      fecha_nacimiento: studentModalData.fecha_nacimiento,
+      ciudad: studentModalData.ciudad,
+    }, {
+      preserveScroll: true,
+      onSuccess: () => setStudentModalData(null),
+      onFinish: () => setApprovingId(null),
+    });
   };
 
   const openRejectModal = (c) => {
@@ -97,7 +131,7 @@ export default function ReviewQueue({
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <Clock size={12} />
-            <span>Pendiente de Revisión</span>
+            <span>Pendiente</span>
           </span>
         );
       case 'APROBADO':
@@ -159,16 +193,9 @@ export default function ReviewQueue({
 
         {/* Loader Overlay de Aprobación */}
         {approvingId && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 flex items-center justify-between animate-in fade-in">
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
-              <div>
-                <p className="text-sm font-bold">Matriculando en microservicio de Proyecto 2...</p>
-                <p className="text-xs text-blue-700">
-                  Conectando con el servidor externo en Render para formalizar el registro del estudiante. Por favor espere.
-                </p>
-              </div>
-            </div>
+          <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 flex items-center gap-3 animate-in fade-in">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
+            <p className="text-xs sm:text-sm font-bold">Matriculando en microservicio de Proyecto 2...</p>
           </div>
         )}
 
@@ -313,7 +340,7 @@ export default function ReviewQueue({
                             ) : tieneComprobantePendiente ? (
                               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800">
                                 <Clock size={12} />
-                                <span>En Revisión</span>
+                                <span>Pendiente</span>
                               </span>
                             ) : (
                               <span className="text-xs text-slate-400">Sin comprobante</span>
@@ -416,8 +443,14 @@ export default function ReviewQueue({
                             </span>
                             <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                               {c.metodo_pago && (
-                                <span className="font-semibold px-2 py-0.5 bg-slate-100 rounded text-slate-700">
-                                  {c.metodo_pago}
+                                <span className={`font-semibold px-2 py-0.5 rounded text-[11px] ${
+                                  c.metodo_pago === 'QR' || c.metodo_pago === 'BILLETERA'
+                                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                                    : c.metodo_pago === 'TARJETA'
+                                    ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                    : 'bg-slate-100 text-slate-700'
+                                }`}>
+                                  {c.metodo_pago === 'QR' || c.metodo_pago === 'BILLETERA' ? 'PAGO QR' : c.metodo_pago === 'TARJETA' ? 'TARJETA STRIPE' : c.metodo_pago}
                                 </span>
                               )}
                               {c.referencia_transaccion && (
@@ -498,7 +531,7 @@ export default function ReviewQueue({
                                 {c.envio_matricula.estado === 'ENVIADO' ? (
                                   <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">
                                     <CheckCircle2 size={12} />
-                                    <span>Matriculado en Proyecto 2</span>
+                                    <span>Matriculado</span>
                                   </span>
                                 ) : (
                                   <div className="space-y-1">
@@ -537,17 +570,17 @@ export default function ReviewQueue({
 
                                   <Button
                                     variant="primary"
-                                    onClick={() => handleApprove(c.id_comprobante)}
+                                    onClick={() => handleApprove(c)}
                                     disabled={isApproving}
                                     className="text-xs py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-xs cursor-pointer"
                                   >
                                     {isApproving ? (
                                       <>
                                         <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        <span>Matriculando...</span>
+                                        <span>Matriculando</span>
                                       </>
                                     ) : (
-                                      <span>{c.estado === 'ERROR' ? 'Reintentar Aprobación' : 'Aprobar Pago'}</span>
+                                      <span>{c.estado === 'ERROR' ? 'Reintentar Aprobación' : 'Aprobar'}</span>
                                     )}
                                   </Button>
                                 </div>
@@ -677,6 +710,117 @@ export default function ReviewQueue({
             router.reload({ preserveScroll: true });
           }}
         />
+      )}
+
+      {/* Modal Completar Datos del Estudiante antes de Aprobar Matrícula */}
+      {studentModalData && (
+        <Modal
+          isOpen={!!studentModalData}
+          onClose={() => !approvingId && setStudentModalData(null)}
+          title="Completar Datos para Formalizar Matrícula"
+        >
+          <div className="space-y-4">
+            <div className="bg-slate-100 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs space-y-1.5 shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Datos de contacto registrados (Solo lectura)
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-800 dark:text-slate-200">
+                <div>
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">Nombre:</span>{' '}
+                  <strong className="font-bold text-slate-900 dark:text-slate-100">{studentModalData.lead?.nombre}</strong>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">Teléfono:</span>{' '}
+                  <strong className="font-bold text-slate-900 dark:text-slate-100">{studentModalData.lead?.telefono || 'Sin teléfono'}</strong>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">Correo:</span>{' '}
+                  <strong className="font-bold text-slate-900 dark:text-slate-100">{studentModalData.lead?.correo || 'Sin correo'}</strong>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleStudentModalSubmit} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-heading)] mb-1">
+                    Cédula de Identidad (CI) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. 8765432"
+                    value={studentModalData.ci}
+                    onChange={(e) =>
+                      setStudentModalData({ ...studentModalData, ci: e.target.value })
+                    }
+                    className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--border-color-dark)] text-xs rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-heading)] mb-1">
+                    Fecha de Nacimiento <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={studentModalData.fecha_nacimiento}
+                    onChange={(e) =>
+                      setStudentModalData({
+                        ...studentModalData,
+                        fecha_nacimiento: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--border-color-dark)] text-xs rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-heading)] mb-1">
+                  Ciudad de Expedición / Residencia <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Santa Cruz de la Sierra"
+                  value={studentModalData.ciudad}
+                  onChange={(e) =>
+                    setStudentModalData({ ...studentModalData, ciudad: e.target.value })
+                  }
+                  className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--border-color-dark)] text-xs rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)]"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[var(--border-color-light)]">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStudentModalData(null)}
+                  disabled={!!approvingId}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={!!approvingId}
+                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                >
+                  {approvingId ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Matriculando</span>
+                    </>
+                  ) : (
+                    <span>Guardar y Aprobar Matrícula</span>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Modal>
       )}
     </AppLayout>
   );

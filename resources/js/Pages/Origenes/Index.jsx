@@ -130,14 +130,15 @@ export default function OrigenesIndex({ origenes = [] }) {
                         </Badge>
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <div className="inline-flex items-center gap-1.5">
+                        <div className="inline-flex items-center gap-2 justify-end">
                           <button
                             type="button"
                             onClick={() => handleEditOpen(origen)}
-                            title="Editar nombre"
-                            className="p-1.5 rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-highlight)] transition cursor-pointer"
+                            title="Editar canal"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-blue-800 bg-blue-100/70 hover:bg-blue-200 border border-blue-300 dark:bg-sky-950/70 dark:text-sky-300 dark:border-sky-700 dark:hover:bg-sky-900 rounded-md transition cursor-pointer"
                           >
-                            <Edit2 size={16} />
+                            <Edit2 size={13} />
+                            <span>Editar</span>
                           </button>
 
                           <button
@@ -149,13 +150,13 @@ export default function OrigenesIndex({ origenes = [] }) {
                                 ? 'No se puede eliminar: tiene prospectos asignados'
                                 : 'Eliminar canal'
                             }
-                            className={`p-1.5 rounded-[var(--radius-sm)] transition ${
+                            className={`p-1.5 rounded-md transition ${
                               origen.leads_count > 0
-                                ? 'text-gray-300 cursor-not-allowed'
-                                : 'text-[var(--text-muted)] hover:text-red-600 hover:bg-red-50 cursor-pointer'
+                                ? 'text-gray-300 dark:text-slate-600 cursor-not-allowed'
+                                : 'text-[var(--text-muted)] hover:text-red-600 hover:bg-red-50 dark:hover:bg-rose-950/40 cursor-pointer'
                             }`}
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </td>

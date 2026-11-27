@@ -40,8 +40,13 @@ class EnrollmentService
         $documentoSanitizado = $this->limpiarDocumento($lead->ci, $lead->id_lead);
 
         // Construir el payload oficial según el contrato de la API
+        // Se compone con id_interes para permitir que un mismo lead pueda matricularse en múltiples cursos distintos
+        $leadIdentifier = $interes
+            ? 'LEAD-' . $lead->id_lead . '-' . $interes->id_interes
+            : 'LEAD-' . $lead->id_lead;
+
         $payload = [
-            'crm_lead_id' => 'LEAD-' . $lead->id_lead,
+            'crm_lead_id' => $leadIdentifier,
             'documento' => $documentoSanitizado,
             'tipo' => $tipoMatricula,
             'acepto_requisitos' => true,
