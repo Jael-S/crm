@@ -110,17 +110,32 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
-### 3.6. Instalar y configurar PostgreSQL 16
+### 3.6. Instalar y Levantar PostgreSQL (Dos Opciones)
+
+#### 🐳 Opción A (Recomendada con Docker - 1 Solo Comando):
+Instala Docker en Ubuntu:
+```bash
+sudo apt install -y docker.io docker-compose-v2
+sudo usermod -aG docker ubuntu
+```
+Levanta la imagen de PostgreSQL 16 con el `docker-compose.yml` que ya está en el repositorio:
+```bash
+cd /var/www/crm
+docker compose up -d
+```
+*(Esto descarga la imagen oficial de PostgreSQL 16, crea la base `crm_educativo`, el usuario `crm_admin` con clave `crm_123` y monta el volumen persistente automáticamente).*
+
+---
+
+#### 🐘 Opción B (PostgreSQL Nativo sin Docker):
 ```bash
 sudo apt install -y postgresql postgresql-contrib
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
-```
 
-Configurar contraseña y crear base de datos:
-```bash
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD '12345';"
-sudo -u postgres psql -c "CREATE DATABASE crm_educativo;"
+sudo -u postgres psql -c "CREATE USER crm_admin WITH PASSWORD 'crm_123' SUPERUSER;"
+sudo -u postgres psql -c "CREATE DATABASE crm_educativo OWNER crm_admin;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE crm_educativo TO crm_admin;"
 ```
 
 ---
@@ -146,18 +161,44 @@ nano .env
 ```
 Edita los siguientes valores clave (usa las flechas del teclado para moverte):
 ```ini
-APP_NAME="CRM Educativo UNEXO"
+APP_NAME="CRM EDUCATIVO"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=http://TU_IP_PUBLICA
 
-# Conexión a Base de Datos local en EC2
+APP_TIMEZONE=America/La_Paz
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=es
+APP_FAKER_LOCALE=es_ES
+
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=crm_educativo
-DB_USERNAME=postgres
-DB_PASSWORD=12345
+DB_USERNAME=crm_admin
+DB_PASSWORD=crm_123
+
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
+
+# Correo Oficial Brevo SMTP (Recuperación de Contraseñas y Alertas)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_USERNAME=c560a3001@smtp-brevo.com
+MAIL_PASSWORD=tu_password_smtp_brevo_aqui
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="33natymaxi@gmail.com"
+MAIL_FROM_NAME="UNEXO"
+
+VITE_APP_NAME="CRM EDUCATIVO"
 
 # Integración con el Proyecto 2 (Grupo 6 SC)
 CATALOG_API_URL=https://proyecto-l1e0.onrender.com/api/v1/catalogo
