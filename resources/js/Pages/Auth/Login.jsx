@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useForm, Head } from '@inertiajs/react';
+import { useForm, Head, Link } from '@inertiajs/react';
 import { GraduationCap, Lock, Mail, Eye, EyeOff, ShieldCheck, UserCheck, Briefcase } from 'lucide-react';
 import Button from '@/Shared/Button';
 
@@ -35,11 +35,11 @@ export default function Login() {
         <div className="bg-gradient-to-r from-[#071828] to-[#0a2540] p-7 text-white text-center relative overflow-hidden">
           <div className="flex justify-center mb-3">
             <img
-              src="/images/unexo1.jpeg"
+              src="/images/unexo4.jpeg"
               alt="Logo UNEXO"
-              className="h-16 w-auto rounded-xl object-contain bg-white/10 p-1.5 shadow-md border border-white/20"
+              className="h-16 w-auto rounded-xl object-contain shadow-md"
               onError={(e) => {
-                e.currentTarget.src = '/images/unexo2.jpeg';
+                e.currentTarget.src = '/images/unexo4.jpeg';
               }}
             />
           </div>
@@ -111,7 +111,7 @@ export default function Login() {
             )}
           </div>
 
-          {/* Recordarme */}
+          {/* Recordarme y Recuperar Contraseña */}
           <div className="flex items-center justify-between">
             <label className="flex items-center space-x-2 text-xs text-[var(--text-muted)] cursor-pointer">
               <input
@@ -122,6 +122,13 @@ export default function Login() {
               />
               <span>Recordar sesión</span>
             </label>
+
+            <Link
+              href="/recuperar-password"
+              className="text-xs text-blue-600 hover:text-blue-800 dark:text-cyan-400 font-semibold hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
 
           {/* Botón Submit */}

@@ -196,6 +196,7 @@ DIAGRAMA INCORRECTO (AL REVÉS - OBSERVADO POR EVANS):
 
 #### 9. `lead_interes` (Programas Académicos de Interés)
 *Propósito:* Resuelve la relación de 1 a N de intereses por prospecto y su estado de avance.
+*Regla de Negocio:* El descuento comercial se aplica a nivel de curso o programa (`lead_interes.id_descuento`), no a nivel global del prospecto (`leads`). Esto garantiza que cada curso tenga su propio precio pactado y descuento individual (por ejemplo, beneficio de fidelidad por materia), evitando duplicidad de descuentos.
 - `id_interes` (BIGSERIAL PRIMARY KEY)
 - `id_lead` (BIGINT NOT NULL REFERENCES leads(id_lead) ON DELETE CASCADE)
 - `tipo` (VARCHAR(20) NOT NULL: `PROGRAMA`, `MODULO`)

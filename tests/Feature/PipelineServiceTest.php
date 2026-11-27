@@ -7,11 +7,13 @@ use App\Models\Lead;
 use App\Models\MotivoPerdida;
 use App\Models\Usuario;
 use App\Services\PipelineService;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class PipelineServiceTest extends TestCase
 {
+    use DatabaseTransactions;
     protected PipelineService $pipelineService;
     protected Usuario $admin;
     protected Lead $lead;

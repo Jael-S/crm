@@ -647,9 +647,26 @@ export default function PipelineKanban({
                 </div>
               </div>
 
-              <p className="text-xs text-[var(--text-main)] mb-4 bg-emerald-50/50 p-3 rounded-[var(--radius-sm)] border border-emerald-100 leading-relaxed">
-                Para completar la conversión a la etapa <strong>Convertido</strong> y preparar la matrícula, el sistema requiere verificar y registrar los datos oficiales de identidad del estudiante.
-              </p>
+              {/* Resumen de Datos Ya Conocidos (Solo Lectura) */}
+              <div className="bg-slate-100 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs mb-4 space-y-1.5 shadow-2xs">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Datos de contacto registrados (Solo lectura)
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-800 dark:text-slate-200">
+                  <div>
+                    <span className="font-semibold text-slate-600 dark:text-slate-400">Nombre:</span>{' '}
+                    <strong className="font-bold text-slate-900 dark:text-slate-100">{conversionModalData.lead.nombre}</strong>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-600 dark:text-slate-400">Teléfono:</span>{' '}
+                    <strong className="font-bold text-slate-900 dark:text-slate-100">{conversionModalData.lead.telefono || 'Sin teléfono'}</strong>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="font-semibold text-slate-600 dark:text-slate-400">Correo:</span>{' '}
+                    <strong className="font-bold text-slate-900 dark:text-slate-100">{conversionModalData.lead.correo || 'Sin correo'}</strong>
+                  </div>
+                </div>
+              </div>
 
               {conversionError && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[var(--radius-sm)] flex items-center gap-2">
@@ -659,19 +676,8 @@ export default function PipelineKanban({
               )}
 
               <form onSubmit={handleConversionSubmit} className="space-y-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-heading)] mb-1">
-                    Nombre Completo Oficial <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={conversionForm.nombre_completo}
-                    onChange={(e) =>
-                      setConversionForm({ ...conversionForm, nombre_completo: e.target.value })
-                    }
-                    className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--border-color-dark)] text-xs rounded-[var(--radius-sm)] text-[var(--text-heading)] focus:outline-none focus:border-[var(--color-primary)]"
-                    required
-                  />
+                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Datos académicos requeridos para formalizar matrícula:
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -681,7 +687,7 @@ export default function PipelineKanban({
                     </label>
                     <input
                       type="text"
-                      placeholder="Ej. 8765432 SC"
+                      placeholder="Ej. 8765432"
                       value={conversionForm.ci}
                       onChange={(e) =>
                         setConversionForm({ ...conversionForm, ci: e.target.value })
@@ -712,7 +718,7 @@ export default function PipelineKanban({
 
                 <div>
                   <label className="block text-xs font-semibold text-[var(--text-heading)] mb-1">
-                    Ciudad de Residencia <span className="text-red-500">*</span>
+                    Ciudad de Expedición / Residencia <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -758,6 +764,20 @@ export default function PipelineKanban({
             lead={paymentModalLead}
             catalogo={catalogo}
             onSuccess={() => {
+              setPaymentModalOpen(false);
+              const currLead = paymentModalLead;
+              setPaymentModalLead(null);
+              // Si faltan datos académicos, encadenar la modal de completar datos obligatorios
+              if (currLead && (!currLead.ci || !currLead.fecha_nacimiento || !currLead.ciudad)) {
+                setConversionModalData({ lead: currLead, targetStageId: 4 });
+                setConversionForm({
+                  ci: currLead.ci || '',
+                  nombre_completo: currLead.nombre_completo || currLead.nombre || '',
+                  fecha_nacimiento: currLead.fecha_nacimiento ? currLead.fecha_nacimiento.split('T')[0] : '',
+                  ciudad: currLead.ciudad || currLead.ciudad_expedido || '',
+                });
+                setConversionError('');
+              }
               router.reload({ only: ['columnas'] });
             }}
           />

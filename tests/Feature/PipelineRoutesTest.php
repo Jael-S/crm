@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Models\Lead;
 use App\Models\OrigenLead;
 use App\Models\Usuario;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class PipelineRoutesTest extends TestCase
 {
+    use DatabaseTransactions;
     protected Usuario $admin;
     protected Usuario $vendedor;
     protected Lead $lead;

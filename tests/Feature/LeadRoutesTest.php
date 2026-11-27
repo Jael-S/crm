@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Lead;
 use App\Models\Usuario;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class LeadRoutesTest extends TestCase
 {
+    use DatabaseTransactions;
     public function test_admin_can_access_leads_and_bolsa_comun(): void
     {
         $admin = Usuario::where('id_rol', 1)->where('activo', true)->first();

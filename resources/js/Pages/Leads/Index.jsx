@@ -233,7 +233,7 @@ export default function LeadsIndex({ leads, filters, origenes = [], etapas = [],
                       {/* Etapa */}
                       <td className="px-6 py-4">
                         <Badge variant={getStageBadgeVariant(lead.etapa?.nombre)}>
-                          {lead.etapa?.nombre || 'Nuevo'}
+                          {(lead.etapa?.nombre || '').toLowerCase().includes('promesa') ? 'Promesa' : (lead.etapa?.nombre || 'Nuevo')}
                         </Badge>
                       </td>
 

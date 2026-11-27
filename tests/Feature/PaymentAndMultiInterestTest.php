@@ -10,6 +10,7 @@ use App\Models\LeadInteres;
 use App\Models\Usuario;
 use App\Services\EnrollmentService;
 use App\Services\PaymentService;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,7 @@ use Tests\TestCase;
 
 class PaymentAndMultiInterestTest extends TestCase
 {
+    use DatabaseTransactions;
     protected PaymentService $paymentService;
     protected Usuario $admin;
     protected Lead $lead;

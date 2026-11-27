@@ -264,7 +264,7 @@ export default function UsersIndex({ usuarios, roles, filters }) {
                       <button
                         type="button"
                         onClick={() => openEditModal(u)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-sky-400 bg-blue-50/50 hover:bg-blue-100/60 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 rounded border border-blue-200 dark:border-sky-800/60 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-blue-800 bg-blue-100/70 hover:bg-blue-200 border border-blue-300 dark:bg-sky-950/70 dark:text-sky-300 dark:border-sky-700 dark:hover:bg-sky-900 rounded-md transition cursor-pointer"
                       >
                         <Edit2 size={13} />
                         <span>Editar</span>
