@@ -49,24 +49,24 @@ Nicol se encarga de pulir la lógica del embudo comercial en el Kanban, la asign
 Jael es responsable de la resiliencia en la captura masiva de datos, el cuadro de mando analítico para el Coordinador (CU8) y la elaboración de los diagramas formales en Enterprise Architect.
 
 ### Checklist de Implementación:
-- [ ] **1. Fallback Resiliente en Importaciones CSV:**
+- [x] **1. Fallback Resiliente en Importaciones CSV:**
   - **Problema:** Si una fila del CSV tiene la columna `origen` vacía o con un texto no registrado en la BD, la importación fallaba por completo.
   - **Solución:** Asignar automáticamente un origen por defecto (`Web` o `Feria/Otro`) en lugar de rechazar el archivo.
   - Registrar las advertencias y filas erróneas en la tabla `importaciones_csv_errores` para que el usuario pueda ver qué filas presentaron anomalías.
-- [ ] **2. Dashboard Analítico y Métricas para Coordinador (CU8):**
+- [x] **2. Dashboard Analítico y Métricas para Coordinador (CU8):**
   - El Coordinador **no vende ni contacta leads**. Su función es supervisar la demanda académica de sus programas asignados.
   - **Métricas obligatorias en su pantalla:**
     - **Embudo de Conversión Académico:** Volumen de prospectos en cada etapa para los diplomados/módulos que coordina.
     - **Tasa de Cierre y Efectividad:** Porcentaje de interesados que culminaron en matrícula exitosa.
     - **Monitoreo de Asesores:** Lista de qué vendedores están atendiendo prospectos que tienen interés en sus programas.
     - **Gráficos interactivos:** Top motivos de pérdida y canales de captación más efectivos para sus programas.
-- [ ] **3. Restricción Estricta de Alcance del Coordinador:**
+- [x] **3. Restricción Estricta de Alcance del Coordinador:**
   - Asegurar que todas las consultas y reportes que visualiza el Coordinador filtren exclusivamente por los `id_version_externo` que dicho usuario tiene asignados en la tabla `coordinador_version`.
 - [ ] **4. Diagramas UML en Enterprise Architect (EA):**
   - **Regla Fundamental:** Guiarse estrictamente por el archivo `DISEÑO_BASE_DATOS_OFICIAL_2P.md`.
   - **Atención al Rombo de Composición:** El rombo negro `◆` debe ir **pegado al Padre (`Lead` o `ImportacionCsv`)**, NUNCA a las tablas hijas.
   - Incluir las 19 tablas y cardinalidades exactas (`1..*`, `0..*`, `1..1`, `0..1`).
-- [ ] **5. Regla Crítica del Catálogo Externo y Vistas de Coordinador (Cohortes y Grupos Vigentes):**
+- [x] **5. Regla Crítica del Catálogo Externo y Vistas de Coordinador (Cohortes y Grupos Vigentes):**
   - Al consultar el catálogo (`/api/v1/catalogo`) del Proyecto 2:
     - **Cohortes de Programas:** Filtrar estrictamente solo las que estén en estado `en_convocatoria` o `en_curso` y con `admite_inscripciones: true`.
     - **Grupos de Módulos:** Filtrar estrictamente solo los que estén en estado `en_convocatoria`, `habilitado` o `en_curso` y con `admite_inscripciones: true`.

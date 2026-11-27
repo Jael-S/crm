@@ -17,6 +17,7 @@ use App\Http\Controllers\DescuentoController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\RecordatorioController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReportController;
 
 // Redirección inicial
 Route::get('/', function () {
@@ -102,6 +103,7 @@ Route::middleware('auth')->group(function () {
     // Catálogo Externo (Proyecto 2) - visible para Administrador y Coordinador
     Route::middleware('checkRole:Administrador,Coordinador')->group(function () {
         Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalogo.index');
+        Route::get('/reportes', [ReportController::class, 'index'])->name('reportes.index');
     });
 
     // Mantiene disponible el enlace anterior mientras se migra al nuevo path.

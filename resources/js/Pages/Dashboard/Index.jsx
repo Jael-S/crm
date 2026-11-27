@@ -9,7 +9,9 @@ import {
   ArrowRight,
   Shield,
   GraduationCap,
-  LayoutDashboard
+  LayoutDashboard,
+  BarChart3,
+  TrendingUp
 } from 'lucide-react';
 
 export default function DashboardIndex({ stats, userRol }) {
@@ -79,35 +81,74 @@ export default function DashboardIndex({ stats, userRol }) {
       )}
 
       {userRol === 'Coordinador' && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-          <Card hover className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[var(--radius-md)] bg-emerald-50 text-[var(--color-success)] flex items-center justify-center">
-              <UserCheck size={24} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-[var(--text-heading)]">{stats?.total_vendedores_activos || 0}</div>
-              <div className="text-xs font-medium text-[var(--text-muted)]">Fuerza de Ventas Activa</div>
-            </div>
-          </Card>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <Card hover className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[var(--radius-md)] bg-blue-50 text-[var(--color-primary)] flex items-center justify-center">
+                <Users size={24} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-[var(--text-heading)]">
+                  {stats?.coordinador?.total_leads ?? 0}
+                </div>
+                <div className="text-xs font-medium text-[var(--text-muted)]">Prospectos en mis Programas</div>
+              </div>
+            </Card>
 
-          <Card hover className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[var(--radius-md)] bg-purple-50 text-purple-600 flex items-center justify-center">
-              <Layers size={24} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-[var(--text-heading)]">{stats?.total_etapas || 0}</div>
-              <div className="text-xs font-medium text-[var(--text-muted)]">Etapas del Embudo</div>
-            </div>
-          </Card>
+            <Card hover className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[var(--radius-md)] bg-emerald-50 text-[var(--color-success)] flex items-center justify-center">
+                <GraduationCap size={24} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-[var(--text-heading)]">
+                  {stats?.coordinador?.leads_convertidos ?? 0}
+                </div>
+                <div className="text-xs font-medium text-[var(--text-muted)]">Matriculados Exitosos</div>
+              </div>
+            </Card>
 
-          <Card hover className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[var(--radius-md)] bg-blue-50 text-[var(--color-primary)] flex items-center justify-center">
-              <Users size={24} />
-            </div>
+            <Card hover className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[var(--radius-md)] bg-purple-50 text-purple-600 flex items-center justify-center">
+                <TrendingUp size={24} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-[var(--text-heading)]">
+                  {stats?.coordinador?.tasa_conversion ?? 0}%
+                </div>
+                <div className="text-xs font-medium text-[var(--text-muted)]">Tasa de Conversión</div>
+              </div>
+            </Card>
+
+            <Card hover className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[var(--radius-md)] bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Layers size={24} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-[var(--text-heading)]">
+                  {stats?.coordinador?.programas_asignados ?? 0}
+                </div>
+                <div className="text-xs font-medium text-[var(--text-muted)]">Programas Asignados</div>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-l-4 border-l-[var(--brand-primary)] bg-gradient-to-r from-blue-50/40 to-transparent">
             <div>
-              <div className="text-2xl font-bold text-[var(--text-heading)]">{stats?.total_origenes || 0}</div>
-              <div className="text-xs font-medium text-[var(--text-muted)]">Canales de Captación</div>
+              <h3 className="font-bold text-[var(--text-heading)] text-base flex items-center gap-2">
+                <BarChart3 size={18} className="text-[var(--brand-primary)]" />
+                <span>Analítica Comercial y Embudo de Ventas (CU8)</span>
+              </h3>
+              <p className="text-xs text-[var(--text-muted)] mt-1 max-w-2xl">
+                Monitorea el progreso de tus prospectos en las 6 etapas del embudo comercial, consulta el rendimiento por asesor y analiza los principales motivos de pérdida.
+              </p>
             </div>
+            <Link
+              href="/reportes"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[var(--brand-primary)] rounded-[var(--radius-sm)] shadow-sm hover:opacity-90 transition shrink-0"
+            >
+              <span>Ver Reporte Completo</span>
+              <ArrowRight size={15} />
+            </Link>
           </Card>
         </div>
       )}

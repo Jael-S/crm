@@ -56,7 +56,10 @@ class CatalogService
                     })->values()->toArray();
 
                     return $programa;
-                })->toArray();
+                })->filter(function ($programa) {
+                    // Solo conservar programas que tengan al menos una cohorte abierta disponible
+                    return !empty($programa['versiones']);
+                })->values()->toArray();
 
                 // Filtrar módulos sueltos: solo incluir grupos que admiten inscripción
                 $modulosSueltos = collect($data['modulos_sueltos'] ?? [])->map(function ($modulo) use ($estadosPermitidosGrupo) {

@@ -36,9 +36,8 @@ export default function LeadsPool({ leads, filters, origenes = [], vendedores = 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [targetLead, setTargetLead] = useState(null);
 
-  // Modales bonitos de confirmación
+  // Modales de confirmación
   const [confirmRoundRobinOpen, setConfirmRoundRobinOpen] = useState(false);
-  const [leadToClaim, setLeadToClaim] = useState(null);
 
   const assignForm = useForm({
     id_vendedor: vendedores[0]?.id_usuario || '',
@@ -108,18 +107,7 @@ export default function LeadsPool({ leads, filters, origenes = [], vendedores = 
     });
   };
 
-  const executeTomarLead = () => {
-    if (!leadToClaim) return;
 
-    router.post(`/leads/${leadToClaim.id_lead}/asignar`, {
-      id_vendedor: user.id_usuario,
-    }, {
-      preserveScroll: true,
-      onSuccess: () => {
-        setLeadToClaim(null);
-      },
-    });
-  };
 
   return (
     <AppLayout>
@@ -313,18 +301,7 @@ export default function LeadsPool({ leads, filters, origenes = [], vendedores = 
                               <Eye size={17} />
                             </Link>
 
-                            {/* Botón para que el vendedor tome el lead */}
-                            {isVendedor && (
-                              <Button
-                                variant="secondary"
-                                onClick={() => setLeadToClaim(lead)}
-                                className="text-xs py-1.5 px-3"
-                              >
-                                Tomar Lead
-                              </Button>
-                            )}
-
-                            {/* Botón para que el Admin/Coordinador asigne manualmente */}
+                            {/* Botón para que el Admin/Coordinador asigne manualmente (Vendedores en modo solo lectura) */}
                             {canAssign && (
                               <Button
                                 variant="primary"
@@ -435,19 +412,6 @@ export default function LeadsPool({ leads, filters, origenes = [], vendedores = 
           variant="brand"
           icon={Shuffle}
           processing={roundRobinForm.processing}
-        />
-
-        {/* Modal de Confirmación Tomar Lead (Vendedor) */}
-        <ConfirmModal
-          isOpen={Boolean(leadToClaim)}
-          onClose={() => setLeadToClaim(null)}
-          onConfirm={executeTomarLead}
-          title="¿Tomar este prospecto?"
-          message={`¿Deseas incorporar a "${leadToClaim?.nombre || 'este prospecto'}" a tu cartera personal de atención comercial?`}
-          confirmText="Sí, Tomar Prospecto"
-          cancelText="Cancelar"
-          variant="primary"
-          icon={UserCheck}
         />
       </div>
     </AppLayout>
