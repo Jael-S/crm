@@ -145,9 +145,9 @@ export default function CsvImport({ historial = [], origenes = [] }) {
               </code>
             </div>
             <div className="mt-4 space-y-2 text-xs text-[var(--text-muted)]">
-              <p><strong className="text-[var(--text-heading)]">Obligatorios:</strong> nombre, telefono e id_origen.</p>
-              <p><strong className="text-[var(--text-heading)]">Opcionales:</strong> ci, profesion, ciudad y correo.</p>
-              <p><strong className="text-[var(--text-heading)]">Origen:</strong> acepta ID o nombre; los nuevos se crean automáticamente.</p>
+              <p><strong className="text-[var(--text-heading)]">Obligatorios:</strong> nombre y teléfono.</p>
+              <p><strong className="text-[var(--text-heading)]">Opcionales / Resilientes:</strong> origen, ci, profesión, ciudad y correo.</p>
+              <p><strong className="text-[var(--text-heading)]">Origen:</strong> acepta ID o nombre; si se omite, se asigna automáticamente "Web" por defecto.</p>
             </div>
             {origenes.length > 0 && (
               <div className="mt-5 border-t border-[var(--border-color-light)] pt-4">

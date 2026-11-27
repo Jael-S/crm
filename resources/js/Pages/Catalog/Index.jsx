@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import {
   Layers,
@@ -11,12 +11,14 @@ import {
   Clock,
   Calendar,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function CatalogIndex({ catalogo }) {
   const [activeTab, setActiveTab] = useState('programas');
   const [expandedProgram, setExpandedProgram] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const programas = catalogo?.programas || [];
   const modulosSueltos = catalogo?.modulos_sueltos || [];
@@ -25,6 +27,14 @@ export default function CatalogIndex({ catalogo }) {
     `Bs ${Number(price || 0).toLocaleString('es-BO', {
       minimumFractionDigits: 2,
     })}`;
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    router.get('/catalogo', { refresh: 1 }, {
+      preserveScroll: true,
+      onFinish: () => setIsRefreshing(false),
+    });
+  };
 
   return (
     <AppLayout>
@@ -43,9 +53,22 @@ export default function CatalogIndex({ catalogo }) {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-semibold self-start sm:self-auto">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>API Proyecto 2 Conectada</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white text-blue-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 shadow-sm"
+              title="Forzar actualización desde la API externa del Proyecto 2"
+            >
+              <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
+              {isRefreshing ? 'Consultando API...' : 'Sincronizar ahora'}
+            </button>
+
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-semibold self-start sm:self-auto">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>API Proyecto 2 Conectada</span>
+            </div>
           </div>
         </div>
 
@@ -177,18 +200,46 @@ function ProgramasTab({ programas, expandedProgram, setExpandedProgram, formatPr
               </button>
 
               {expanded && (
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  {(programa.modulos || []).map((modulo, mIdx) => (
-                    <div
-                      key={modulo.id || mIdx}
-                      className="p-3 bg-slate-50 rounded-xl flex items-center justify-between text-xs font-medium"
-                    >
-                      <span className="text-slate-800">{modulo.nombre}</span>
-                      <span className="text-slate-500 inline-flex items-center gap-1">
-                        <Clock size={12} /> {modulo.horas || 0} hrs
+                <div className="pt-3 border-t border-slate-100 space-y-3">
+                  {programa.versiones && programa.versiones.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Cohortes en convocatoria abierta:
                       </span>
+                      <div className="space-y-1">
+                        {programa.versiones.map((v) => (
+                          <div
+                            key={v.id}
+                            className="p-2.5 bg-blue-50/70 border border-blue-200/60 rounded-xl flex items-center justify-between text-xs"
+                          >
+                            <span className="font-bold text-blue-900">{v.nombre}</span>
+                            <span className="text-blue-700 font-semibold bg-white px-2 py-0.5 rounded border border-blue-200 text-[11px]">
+                              {v.estado === 'en_curso' ? 'En curso (Inscripciones abiertas)' : 'En convocatoria'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Plan de Estudios ({programa.modulos?.length || 0} módulos):
+                    </span>
+                    <div className="space-y-1.5">
+                      {(programa.modulos || []).map((modulo, mIdx) => (
+                        <div
+                          key={modulo.id || mIdx}
+                          className="p-3 bg-slate-50 rounded-xl flex items-center justify-between text-xs font-medium"
+                        >
+                          <span className="text-slate-800">{modulo.nombre}</span>
+                          <span className="text-slate-500 inline-flex items-center gap-1">
+                            <Clock size={12} /> {modulo.horas || 0} hrs
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

@@ -30,7 +30,8 @@ import {
   Clock,
   ChevronRight,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  BarChart3
 } from 'lucide-react';
 
 export default function AppLayout({ children, title, hideFlash = false }) {
@@ -161,6 +162,7 @@ export default function AppLayout({ children, title, hideFlash = false }) {
       title: 'CAPTACIÓN Y OFERTA',
       items: [
         { name: 'Registrar Prospecto', href: '/leads/create', icon: UserPlus, roles: ['Administrador', 'Coordinador', 'Vendedor'] },
+        { name: 'Importar Leads (CSV)', href: '/leads/import', icon: FileSpreadsheet, roles: ['Administrador', 'Coordinador'] },
         { name: 'Catálogo Académico', href: '/catalogo', icon: Layers, roles: ['Administrador', 'Coordinador'] },
         { name: 'Canales de Origen', href: '/origenes', icon: Share2, roles: ['Administrador', 'Coordinador'] },
         { name: 'Descuentos y Becas', href: '/descuentos', icon: Tag, roles: ['Administrador'] },
@@ -203,9 +205,10 @@ export default function AppLayout({ children, title, hideFlash = false }) {
       ]
     },
     {
-      id: 'cu8',
+id: 'cu8',
       title: 'ANALÍTICA Y BI',
       items: [
+        { name: 'Reportes y Analítica', href: '/reportes', icon: BarChart3, roles: ['Administrador', 'Coordinador'] },
         { name: 'Embudo General', href: '/dashboard', icon: LayoutDashboard, roles: ['Administrador', 'Coordinador', 'Vendedor'] },
         { name: 'Métricas Coordinador', href: '/coordinadores/versiones', icon: GraduationCap, roles: ['Administrador', 'Coordinador'] },
       ]

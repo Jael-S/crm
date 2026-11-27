@@ -63,13 +63,18 @@ class CsvImportService
                 $totalFilas++;
 
                 $datos = $this->mapearFila($row, $columnas);
-                $errorFila = $this->validarFila($datos);
+                [$errorFila, $advertenciaFila] = $this->validarFila($datos);
 
                 if ($errorFila !== null) {
                     $filasFallidas++;
                     $this->registrarError($importacion, $numeroFila, $errorFila);
-                    $errores[] = "Fila {$numeroFila}: {$errorFila}";
+                    $errores[] = "Línea {$numeroFila}: {$errorFila}";
                     continue;
+                }
+
+                if ($advertenciaFila !== null) {
+                    $this->registrarError($importacion, $numeroFila, $advertenciaFila);
+                    $errores[] = "Línea {$numeroFila}: {$advertenciaFila}";
                 }
 
                 try {
@@ -88,9 +93,9 @@ class CsvImportService
                     $filasExitosas++;
                 } catch (\Throwable $e) {
                     $filasFallidas++;
-                    $motivo = 'no se pudo registrar el prospecto: '.$e->getMessage();
+                    $motivo = 'No se pudo registrar el prospecto: '.$e->getMessage();
                     $this->registrarError($importacion, $numeroFila, $motivo);
-                    $errores[] = "Fila {$numeroFila}: {$motivo}";
+                    $errores[] = "Línea {$numeroFila}: {$motivo}";
                 }
             }
         } finally {
@@ -172,56 +177,128 @@ class CsvImportService
         ];
     }
 
-    private function validarFila(array &$datos): ?string
+    /**
+     * Valida los datos mapeados de una fila del CSV.
+     * Retorna una tupla: [error, advertencia].
+     * Si 'error' no es null, la fila no debe procesarse.
+     * Si 'advertencia' no es null pero 'error' es null, la fila se procesa con fallback resiliente.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function validarFila(array &$datos): array
     {
         $validator = Validator::make($datos, [
             'nombre' => ['required', 'string', 'max:120'],
             'telefono' => ['required', 'string', 'max:20'],
             'correo' => ['nullable', 'email', 'max:120'],
-            'id_origen_raw' => ['required', 'string', 'max:50'],
+            'id_origen_raw' => ['nullable', 'string', 'max:50'],
             'ci' => ['nullable', 'string', 'max:20'],
             'ciudad' => ['nullable', 'string', 'max:60'],
             'id_profesion_raw' => ['nullable', 'string', 'max:100'],
         ], [
-            'nombre.required' => 'el nombre es obligatorio',
-            'nombre.max' => 'el nombre supera 120 caracteres',
-            'telefono.required' => 'el teléfono es obligatorio',
-            'telefono.max' => 'el teléfono supera 20 caracteres',
-            'correo.email' => 'el correo no es válido',
-            'id_origen_raw.required' => 'el origen es obligatorio',
+            'nombre.required' => 'El nombre es obligatorio.',
+            'nombre.max' => 'El nombre supera 120 caracteres.',
+            'telefono.required' => 'El teléfono es obligatorio.',
+            'telefono.max' => 'El teléfono supera 20 caracteres.',
+            'correo.email' => 'El correo electrónico no es válido.',
         ]);
 
         if ($validator->fails()) {
-            return $validator->errors()->first();
+            return [$validator->errors()->first(), null];
         }
 
-        $origen = $this->resolverOrigen($datos['id_origen_raw']);
-        if ($origen === null) {
-            return "el origen '{$datos['id_origen_raw']}' no pudo registrarse";
-        }
-        $datos['id_origen'] = $origen->id_origen;
+        // 1. Fallback resiliente en origen: si está vacío o no existe, asignar por defecto sin rechazar la fila
+        $origenRes = $this->resolverOrigenConFallback($datos['id_origen_raw'] ?? '');
+        $datos['id_origen'] = $origenRes['origen']->id_origen;
+        $advertencias = [];
 
-        if ($datos['id_profesion_raw'] !== '') {
+        if ($origenRes['advertencia'] !== null) {
+            $advertencias[] = $origenRes['advertencia'];
+        }
+
+        // 2. Profesión resiliente: si no existe en BD, registrar advertencia y continuar sin romper la fila
+        if (($datos['id_profesion_raw'] ?? '') !== '') {
             $profesion = $this->resolverProfesion($datos['id_profesion_raw']);
-            if ($profesion === null) {
-                return "la profesión con ID '{$datos['id_profesion_raw']}' no existe";
+            if ($profesion !== null) {
+                $datos['id_profesion'] = $profesion->id_profesion;
+            } else {
+                $advertencias[] = "La profesión '{$datos['id_profesion_raw']}' no pudo ser validada; se continuó sin asignar profesión.";
+                $datos['id_profesion'] = null;
             }
-            $datos['id_profesion'] = $profesion->id_profesion;
         }
 
-        return null;
+        $advertenciaFila = !empty($advertencias) ? implode(' | ', $advertencias) : null;
+
+        return [null, $advertenciaFila];
+    }
+
+    /**
+     * Resuelve el origen del prospecto o asigna el origen por defecto con advertencia.
+     *
+     * @return array{origen: OrigenLead, advertencia: ?string}
+     */
+    private function resolverOrigenConFallback(mixed $valor): array
+    {
+        $valorTrim = trim((string) $valor);
+
+        // Caso 1: Origen vacío en el archivo CSV
+        if ($valorTrim === '') {
+            $origenDefault = $this->obtenerOrigenPorDefecto();
+            return [
+                'origen' => $origenDefault,
+                'advertencia' => "Columna origen vacía: se asignó automáticamente '{$origenDefault->nombre}' por defecto.",
+            ];
+        }
+
+        // Caso 2: Intento de resolución normal (numérico o texto)
+        $origen = $this->resolverOrigen($valorTrim);
+        if ($origen !== null) {
+            return [
+                'origen' => $origen,
+                'advertencia' => null,
+            ];
+        }
+
+        // Caso 3: Fallo de resolución -> Fallback seguro
+        $origenDefault = $this->obtenerOrigenPorDefecto();
+        return [
+            'origen' => $origenDefault,
+            'advertencia' => "Origen '{$valorTrim}' no reconocido: se asignó '{$origenDefault->nombre}' por defecto.",
+        ];
+    }
+
+    private function obtenerOrigenPorDefecto(): OrigenLead
+    {
+        return OrigenLead::whereRaw('LOWER(TRIM(nombre)) = ?', ['web'])->first()
+            ?? OrigenLead::orderBy('id_origen')->first()
+            ?? OrigenLead::create(['nombre' => 'Web']);
     }
 
     private function resolverOrigen(string $valor): ?OrigenLead
     {
         $valor = trim($valor);
 
-        if (is_numeric($valor)) {
-            return OrigenLead::find((int) $valor);
+        if ($valor === '') {
+            return null;
         }
 
-        return OrigenLead::whereRaw('LOWER(TRIM(nombre)) = ?', [mb_strtolower($valor)])->first()
-            ?? OrigenLead::create(['nombre' => $valor]);
+        if (is_numeric($valor)) {
+            $encontrado = OrigenLead::find((int) $valor);
+            if ($encontrado) {
+                return $encontrado;
+            }
+        }
+
+        $existente = OrigenLead::whereRaw('LOWER(TRIM(nombre)) = ?', [mb_strtolower($valor)])->first();
+        if ($existente) {
+            return $existente;
+        }
+
+        try {
+            return OrigenLead::create(['nombre' => $valor]);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function resolverProfesion(string $valor): ?Profesion

@@ -326,6 +326,12 @@ class LeadSeeder extends Seeder
             'created_at' => now()->subDays(5),
         ]);
 
+        // Asignación de versión 1 (IAA) a la Coordinadora Jael (id_usuario = 2) para pruebas y métricas
+        \App\Models\CoordinadorVersion::firstOrCreate([
+            'id_usuario' => 2,
+            'id_version_externo' => 1,
+        ]);
+
         // Secuencias de PostgreSQL
         if (DB::getDriverName() === 'pgsql') {
             DB::statement("SELECT setval(pg_get_serial_sequence('leads', 'id_lead'), coalesce(max(id_lead), 1)) FROM leads;");
