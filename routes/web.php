@@ -19,16 +19,24 @@ use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\RecordatorioController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PublicRegistrationController;
 
-// Redirección inicial
-Route::get('/', function () {
-    return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
-});
+// Paso 6: Landing Page Corporativa FICCT en Raíz (/) y Captación Libre
+Route::get('/', [PublicRegistrationController::class, 'landing'])->name('landing');
+Route::get('/registro', [PublicRegistrationController::class, 'showForm'])->name('registro.form');
+Route::post('/registro', [PublicRegistrationController::class, 'register'])->name('registro.submit');
 
 // Rutas Públicas (Auth)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+
+    // Paso 4: Recuperación de Contraseñas (Brevo SMTP / Signed URLs)
+    Route::get('/recuperar-password', [PasswordResetController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('/recuperar-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{id}', [PasswordResetController::class, 'showResetPasswordForm'])->name('password.reset');
+    Route::post('/reset-password/{id}', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
 
 // Rutas Protegidas por Autenticación
