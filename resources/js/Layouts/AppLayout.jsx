@@ -281,9 +281,9 @@ export default function AppLayout({ children, title, hideFlash = false }) {
           {/* Logo UNEXO en el Header */}
           <Link href="/dashboard" className="flex items-center gap-2 mr-1 sm:mr-3 shrink-0 group">
             <img
-              src="/images/unexo1.jpeg"
+              src="/images/unexo4.jpeg"
               alt="UNEXO"
-              className="h-8 sm:h-9 w-auto rounded object-contain bg-white/10 p-0.5 shadow-2xs group-hover:scale-105 transition-transform"
+              className="h-8 sm:h-9 w-auto rounded-lg object-contain shadow-xs group-hover:scale-105 transition-transform"
             />
             <div className="hidden sm:flex flex-col leading-none">
               <span className="font-extrabold text-white text-sm tracking-wider">UNEXO</span>
@@ -297,7 +297,7 @@ export default function AppLayout({ children, title, hideFlash = false }) {
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Buscar prospecto por nombre, CI, teléfono o correo..."
+                placeholder="Buscar módulos, secciones o prospectos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
@@ -313,8 +313,9 @@ export default function AppLayout({ children, title, hideFlash = false }) {
             {/* Resultados Predictivos Dropdown */}
             {searchOpen && (
               <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150">
-                <div className="p-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                  Resultados coincidentes ({searchResults.length})
+                <div className="p-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 flex items-center justify-between">
+                  <span>Resultados ({searchResults.length})</span>
+                  <span className="text-[10px] lowercase text-slate-400 font-normal">módulos y prospectos</span>
                 </div>
                 {searchResults.length > 0 ? (
                   <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
@@ -326,26 +327,46 @@ export default function AppLayout({ children, title, hideFlash = false }) {
                           setSearchOpen(false);
                           setSearchQuery('');
                         }}
-                        className="p-3 hover:bg-blue-50/70 flex items-center justify-between transition group"
+                        className="p-3 hover:bg-blue-50/70 flex items-center justify-between transition group cursor-pointer"
                       >
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600">
-                            {res.nombre}
-                          </p>
-                          <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
-                            {res.ci && <span>CI: {res.ci}</span>}
-                            {res.telefono && <span>Tel: {res.telefono}</span>}
+                        {res.tipo === 'modulo' ? (
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-100 group-hover:bg-cyan-100 transition">
+                              <Layers size={16} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-900 group-hover:text-blue-600">
+                                {res.nombre}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {res.categoria}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-medium">
-                          {res.etapa}
+                        ) : (
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600">
+                              {res.nombre}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+                              {res.ci && <span>CI: {res.ci}</span>}
+                              {res.telefono && <span>Tel: {res.telefono}</span>}
+                            </div>
+                          </div>
+                        )}
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                          res.tipo === 'modulo'
+                            ? 'bg-cyan-100 text-cyan-800 font-bold'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}>
+                          {res.tipo === 'modulo' ? 'Ir al Módulo' : res.etapa}
                         </span>
                       </Link>
                     ))}
                   </div>
                 ) : (
                   <div className="p-4 text-center text-xs text-slate-500">
-                    No se encontraron prospectos para "{searchQuery}"
+                    No se encontraron módulos ni prospectos para "{searchQuery}"
                   </div>
                 )}
               </div>
@@ -530,7 +551,7 @@ export default function AppLayout({ children, title, hideFlash = false }) {
             />
             <div className="relative w-72 bg-[var(--bg-sidebar-header)] border-r border-[var(--border-sidebar-header)] text-white h-full p-5 shadow-2xl flex flex-col z-50 overflow-y-auto transition-colors duration-200">
               <div className="flex items-center gap-3 pb-4 border-b border-slate-800 mb-4">
-                <img src="/images/unexo1.jpeg" alt="Logo UNEXO" className="h-8 w-auto rounded" />
+                <img src="/images/unexo4.jpeg" alt="Logo UNEXO" className="h-8 w-auto rounded-lg object-contain shadow-xs" />
                 <span className="font-bold text-sm tracking-wider">UNEXO CRM</span>
               </div>
               <div className="space-y-4 flex-1">
